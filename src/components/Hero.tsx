@@ -18,19 +18,21 @@ export function Hero() {
             <Sparkles className="h-3.5 w-3.5" /> Gautam Modi Group · Careers
           </span>
           <h1 className="mt-6 text-4xl font-black leading-tight tracking-tight md:text-6xl">
-            Build Your Career With <span className="text-gmg-gold">Gautam Modi Group</span>
+            Careers at <span className="text-gmg-gold">Gautam Modi Group</span>
           </h1>
-          <p className="mt-5 text-lg font-medium text-white/90">
-            We embrace new opportunities that inspire growth, innovation, and progress.
+          <p className="mt-5 text-lg font-semibold text-white/90 md:text-2xl">
+            Build Your Career With One of India's Leading Automotive Groups
           </p>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/70">
-            Join one of India's fast-growing automotive groups, representing leading brands including
-            Audi, Mahindra, Hyundai, Kia and MG. We are always looking for driven talent across sales,
-            service, operations, finance, HR and leadership roles.
+          <p className="mt-5 max-w-2xl text-sm leading-relaxed text-white/70 md:text-base">
+            Gautam Modi Group is one of India's fast-growing automotive groups, representing leading
+            brands including Audi, Mahindra, Hyundai, Kia and MG. Join a high-growth organisation
+            offering exciting career opportunities across sales, service, operations, finance, HR,
+            marketing and leadership — backed by hands-on learning, strong industry partnerships, and
+            accelerated career growth.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <a href="#jobs">
+              <a href="#open-roles">
                 Explore Open Roles <ArrowDown className="h-4 w-4" />
               </a>
             </Button>

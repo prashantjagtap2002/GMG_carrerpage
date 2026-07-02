@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { Search } from "lucide-react"
+import { Search, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { MultiSelect } from "@/components/ui/multi-select"
 import { JobCard } from "@/components/JobCard"
 import { departments, jobs, jobTypes, locations } from "@/data/jobs"
 
@@ -30,21 +31,40 @@ const values = [
   },
 ]
 
+// Build filter options with a count of matching roles (like the IIDE filters).
+function withCounts(getValue: (v: string) => number) {
+  return (values: string[]) =>
+    values.map((v) => ({ value: v, label: v, count: getValue(v) }))
+}
+
+const deptOptions = withCounts((v) => jobs.filter((j) => j.department === v).length)(departments)
+const locOptions = withCounts((v) => jobs.filter((j) => j.city === v).length)(locations)
+const typeOptions = withCounts((v) => jobs.filter((j) => j.jobType === v).length)(jobTypes)
+
 export function HomePage() {
   const [query, setQuery] = useState("")
-  const [dept, setDept] = useState("all")
-  const [loc, setLoc] = useState("all")
-  const [type, setType] = useState("all")
+  const [dept, setDept] = useState<string[]>([])
+  const [loc, setLoc] = useState<string[]>([])
+  const [type, setType] = useState<string[]>([])
   const [sort, setSort] = useState("newest")
+
+  const hasFilters = query.trim() !== "" || dept.length > 0 || loc.length > 0 || type.length > 0
+
+  function clearFilters() {
+    setQuery("")
+    setDept([])
+    setLoc([])
+    setType([])
+  }
 
   const filtered = useMemo(() => {
     const list = jobs.filter((j) => {
       const q = query.trim().toLowerCase()
       const matchesQuery =
         !q || j.title.toLowerCase().includes(q) || j.department.toLowerCase().includes(q)
-      const matchesDept = dept === "all" || j.department === dept
-      const matchesLoc = loc === "all" || j.city === loc
-      const matchesType = type === "all" || j.jobType === type
+      const matchesDept = dept.length === 0 || dept.includes(j.department)
+      const matchesLoc = loc.length === 0 || loc.includes(j.city)
+      const matchesType = type.length === 0 || type.includes(j.jobType)
       return matchesQuery && matchesDept && matchesLoc && matchesType
     })
     return [...list].sort((a, b) => {
@@ -85,9 +105,9 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="border-b bg-secondary/40">
+      <section id="open-roles" className="border-b bg-secondary/40">
         <div className="container py-12 text-center">
-          <h2 className="text-3xl font-bold tracking-tight">Open positions</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Discover Career Opportunities at GMG</h2>
           <p className="mt-2 text-muted-foreground">
             Find your next role and apply directly — no redirects.
           </p>
@@ -105,45 +125,27 @@ export function HomePage() {
               className="pl-9"
             />
           </div>
-          <Select value={dept} onValueChange={setDept}>
-            <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Department" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All departments</SelectItem>
-              {departments.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={loc} onValueChange={setLoc}>
-            <SelectTrigger className="w-full md:w-[160px]">
-              <SelectValue placeholder="Location" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All locations</SelectItem>
-              {locations.map((l) => (
-                <SelectItem key={l} value={l}>
-                  {l}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={type} onValueChange={setType}>
-            <SelectTrigger className="w-full md:w-[150px]">
-              <SelectValue placeholder="Job type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
-              {jobTypes.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelect
+            options={deptOptions}
+            selected={dept}
+            onChange={setDept}
+            placeholder="Department"
+            className="w-full md:w-[190px]"
+          />
+          <MultiSelect
+            options={locOptions}
+            selected={loc}
+            onChange={setLoc}
+            placeholder="Location"
+            className="w-full md:w-[170px]"
+          />
+          <MultiSelect
+            options={typeOptions}
+            selected={type}
+            onChange={setType}
+            placeholder="Job type"
+            className="w-full md:w-[160px]"
+          />
           <Select value={sort} onValueChange={setSort}>
             <SelectTrigger className="w-full md:w-[160px]">
               <SelectValue placeholder="Sort" />
@@ -160,12 +162,30 @@ export function HomePage() {
           <p className="text-sm text-muted-foreground">
             {filtered.length} open {filtered.length === 1 ? "role" : "roles"}
           </p>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" /> Clear filters
+            </button>
+          )}
         </div>
 
         {filtered.length === 0 ? (
           <div className="rounded-lg border border-dashed p-16 text-center">
             <p className="text-lg font-medium">No jobs match your search</p>
             <p className="mt-1 text-sm text-muted-foreground">Try clearing some filters.</p>
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-4 inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-secondary"
+              >
+                <X className="h-3.5 w-3.5" /> Clear all filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
