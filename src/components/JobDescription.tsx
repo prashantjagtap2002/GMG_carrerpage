@@ -19,6 +19,43 @@ const HEADERS = [
   "Location:",
 ]
 
+const CONNECTORS = new Set([
+  "of",
+  "and",
+  "the",
+  "for",
+  "with",
+  "to",
+  "a",
+  "in",
+  "by",
+  "or",
+  "on",
+  "at",
+  "as",
+  "&",
+])
+
+/**
+ * Heuristic that decides whether a plain-text line is a section heading
+ * (so it can be rendered bold). Keeps full sentences as normal paragraphs.
+ */
+function isHeader(line: string): boolean {
+  const t = line.trim()
+  if (!t || t.length > 60) return false
+  if (/[.,;]$/.test(t)) return false
+  if (/^[A-Z]\)\s+/.test(t)) return true // "A) Customer Satisfaction ..."
+  if (/^\d+\.\s+[A-Z]/.test(t)) {
+    const words = t.split(/\s+/)
+    if (words.length <= 7) return true // "1. Primary Responsibilities"
+  }
+  if (/:$/.test(t)) return true // short label ending with ":"
+  const words = t.split(/\s+/)
+  if (words.length < 2 || words.length > 7) return false
+  const significant = words.filter((w) => /^[A-Z(]/.test(w) || CONNECTORS.has(w.toLowerCase()))
+  return significant.length >= Math.ceil(words.length * 0.6)
+}
+
 export function JobDescription({ text }: { text: string }) {
   if (!text) return <p className="text-muted-foreground">No description available.</p>
 
@@ -49,6 +86,13 @@ export function JobDescription({ text }: { text: string }) {
             <p key={i} className="flex gap-2.5 pl-3">
               <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/60" />
               <span>{line.replace(/^○\s*/, "")}</span>
+            </p>
+          )
+        }
+        if (isHeader(line)) {
+          return (
+            <p key={i} className="pt-3 text-base font-semibold text-foreground">
+              {line}
             </p>
           )
         }
