@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vite
+
+# build logs & scaffolding
+*.log
+*.pid
+*.tsbuildinfo
