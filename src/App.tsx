@@ -1,10 +1,9 @@
-import { useEffect } from "react"
+import { useEffect, type ReactNode } from "react"
 import { Route, Routes, useLocation } from "react-router-dom"
-import { Footer } from "@/components/Footer"
-import { Header } from "@/components/Header"
 import { Hero } from "@/components/Hero"
 import { HomePage } from "@/pages/HomePage"
 import { JobDetailPage } from "@/pages/JobDetailPage"
+import { AdminPage } from "@/pages/AdminPage"
 
 // Ensure every route change starts at the top of the page.
 // Without this, opening a job detail keeps the previous scroll offset
@@ -17,26 +16,46 @@ function ScrollToTop() {
   return null
 }
 
+// Public pages render without the marketing header/footer chrome — a clean,
+// embeddable careers surface (IIDE-style). Admin lives at /admin.
+function PublicLayout({ children }: { children: ReactNode }) {
+  return <>{children}</>
+}
+
 export default function App() {
   return (
     <div className="flex min-h-screen flex-col">
       <ScrollToTop />
-      <Header />
       <Routes>
+        {/* Mini CRM — standalone admin dashboard (no marketing chrome) */}
+        <Route path="/admin" element={<AdminPage />} />
         <Route
           path="/"
           element={
-            <>
+            <PublicLayout>
               <Hero />
               <HomePage />
-            </>
+            </PublicLayout>
           }
         />
         {/* Local job detail route — keeps users on this site, no redirect to IIDE/Zoho */}
-        <Route path="/jobs/:id" element={<JobDetailPage />} />
-        <Route path="*" element={<HomePage />} />
+        <Route
+          path="/jobs/:id"
+          element={
+            <PublicLayout>
+              <JobDetailPage />
+            </PublicLayout>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <PublicLayout>
+              <HomePage />
+            </PublicLayout>
+          }
+        />
       </Routes>
-      <Footer />
     </div>
   )
 }

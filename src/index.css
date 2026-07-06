@@ -24,7 +24,7 @@
     --border: 0 0% 90%;
     --input: 0 0% 90%;
     --ring: 42 100% 50%;
-    --radius: 0.5rem;
+    --radius: 0.25rem;                    /* crisp corners, matching GMG's premium automotive look */
   }
 }
 

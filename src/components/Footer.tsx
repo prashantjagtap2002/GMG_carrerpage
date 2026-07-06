@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 import { Facebook, Instagram, Linkedin, Youtube } from "lucide-react"
 
 const GMG_LOGO =
@@ -65,6 +66,12 @@ export function Footer() {
             >
               Get in touch →
             </a>
+            <Link
+              to="/admin"
+              className="mt-2 inline-block text-xs text-white/40 transition-colors hover:text-white/70"
+            >
+              Admin / CRM
+            </Link>
           </div>
         </div>
         <div className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-white/50">

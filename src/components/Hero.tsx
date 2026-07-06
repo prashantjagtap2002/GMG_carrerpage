@@ -1,19 +1,23 @@
 import { ArrowDown, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+const GMG_LOGO =
+  "https://bunny-wp-pullzone-cghvklkcns.b-cdn.net/wp-content/uploads/2026/01/Untitled-design-32.png"
+
 export function Hero() {
   return (
     <section className="relative isolate overflow-hidden bg-gmg-black">
       <div className="absolute inset-0 -z-10">
         <img
-          src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=2000&q=80"
+          src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2400&q=80"
           alt=""
-          className="h-full w-full object-cover opacity-60"
+          className="h-full w-full object-cover opacity-50"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/75 to-black/90" />
       </div>
       <div className="container py-28 text-white md:py-36">
-        <div className="max-w-3xl">
+        <div className="mx-auto max-w-3xl text-center">
+          <img src={GMG_LOGO} alt="Gautam Modi Group" className="mx-auto mb-8 h-14 w-auto" />
           <span className="inline-flex items-center gap-2 rounded-full border border-gmg-gold/40 bg-gmg-gold/10 px-3 py-1 text-xs font-medium tracking-wide text-gmg-gold backdrop-blur">
             <Sparkles className="h-3.5 w-3.5" /> Gautam Modi Group · Careers
           </span>
@@ -23,14 +27,14 @@ export function Hero() {
           <p className="mt-5 text-lg font-semibold text-white/90 md:text-2xl">
             Build Your Career With One of India's Leading Automotive Groups
           </p>
-          <p className="mt-5 max-w-2xl text-sm leading-relaxed text-white/70 md:text-base">
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/70 md:text-base">
             Gautam Modi Group is one of India's fast-growing automotive groups, representing leading
             brands including Audi, Mahindra, Hyundai, Kia and MG. Join a high-growth organisation
             offering exciting career opportunities across sales, service, operations, finance, HR,
             marketing and leadership — backed by hands-on learning, strong industry partnerships, and
             accelerated career growth.
           </p>
-          <div className="mt-9 flex flex-wrap gap-3">
+          <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Button asChild size="lg">
               <a href="#open-roles">
                 Explore Open Roles <ArrowDown className="h-4 w-4" />

@@ -39,7 +39,8 @@ function decodeEntities(s: string): string {
     .replace(/&apos;/g, "'")
 }
 
-export const jobs: Job[] = (rawJobs as RawJob[])
+/** Static catalogue loaded from jobs_data.json (read-only). */
+export const seededJobs: Job[] = (rawJobs as RawJob[])
   .filter((j) => j.Publish !== false)
   .map((j) => ({
     id: j.id,
@@ -53,14 +54,6 @@ export const jobs: Job[] = (rawJobs as RawJob[])
     experience: j.Work_Experience || "Not specified",
     dateOpened: j.Date_Opened || "",
   }))
-
-export function getJobById(id: string): Job | undefined {
-  return jobs.find((j) => j.id === id)
-}
-
-export const departments = Array.from(new Set(jobs.map((j) => j.department))).sort()
-export const locations = Array.from(new Set(jobs.map((j) => j.city).filter(Boolean))).sort()
-export const jobTypes = Array.from(new Set(jobs.map((j) => j.jobType).filter(Boolean))).sort()
 
 export function locationString(job: Job): string {
   return [job.city, job.state, job.country].filter(Boolean).join(", ")

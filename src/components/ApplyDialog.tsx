@@ -9,10 +9,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { jobs, type Job } from "@/data/jobs"
+import { type Job } from "@/data/jobs"
+import { addApplication, useAllJobs } from "@/lib/crm-store"
+import { saveResume } from "@/lib/resume-store"
 
 const inputCls =
-  "h-11 w-full rounded-md border border-white/15 bg-white/[0.04] px-3 text-sm text-white placeholder:text-white/40 focus:border-gmg-gold focus:outline-none focus:ring-1 focus:ring-gmg-gold"
+  "h-11 w-full rounded-md border border-white/15 bg-white/[0.04] px-3 text-sm text-white placeholder:text-white/40 [color-scheme:dark] focus:border-gmg-gold focus:outline-none focus:ring-1 focus:ring-gmg-gold"
 const labelCls = "mb-1.5 block text-sm font-semibold text-white"
 
 const countries = [
@@ -39,8 +41,6 @@ const sources = [
   "Newspaper / Print",
   "Other",
 ]
-
-const jobTitles = Array.from(new Set(jobs.map((j) => j.title))).sort()
 
 function Field({
   label,
@@ -78,10 +78,33 @@ function SelectField(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
 export function ApplyDialog({ job }: { job: Job }) {
   const [open, setOpen] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const allJobs = useAllJobs()
+  const jobTitles = Array.from(new Set(allJobs.map((j) => j.title))).sort()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    // Local only — no external redirect or submit to IIDE/Zoho.
+    const form = e.currentTarget as HTMLFormElement
+    const data = new FormData(form)
+    const applyingFor = String(data.get("applyingFor") || job.title)
+    const matched = allJobs.find((j) => j.title === applyingFor)
+    const fileInput = form.querySelector<HTMLInputElement>("#resume")
+    const file = fileInput?.files?.[0]
+    const created = addApplication({
+      jobId: matched?.id ?? job.id,
+      jobTitle: applyingFor,
+      firstName: String(data.get("firstName") || ""),
+      lastName: String(data.get("lastName") || ""),
+      email: String(data.get("email") || ""),
+      company: String(data.get("company") || ""),
+      currentTitle: String(data.get("currentTitle") || ""),
+      country: String(data.get("country") || ""),
+      website: String(data.get("website") || ""),
+      source: String(data.get("source") || ""),
+      message: String(data.get("message") || ""),
+      resumeName: file?.name ?? "",
+    })
+    // Persist the actual file bytes so the admin can view/download it later.
+    if (file) void saveResume(created.id, file)
     setSubmitted(true)
   }
 
@@ -105,10 +128,14 @@ export function ApplyDialog({ job }: { job: Job }) {
             <h3 className="text-lg font-semibold">Application received!</h3>
             <p className="text-sm text-white/70">
               Thanks for your interest in{" "}
-              <span className="font-medium text-white">{job.title}</span>. This is a demo form — no
-              data was sent anywhere.
+              <span className="font-medium text-white">{job.title}</span>. Your application has been
+              recorded — our recruitment team will reach out to you soon.
             </p>
-            <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => setOpen(false)}>
+            <Button
+              variant="outline"
+              className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+              onClick={() => setOpen(false)}
+            >
               Close
             </Button>
           </div>
@@ -117,7 +144,8 @@ export function ApplyDialog({ job }: { job: Job }) {
             <DialogHeader>
               <DialogTitle className="text-2xl">I'm interested in {job.title}</DialogTitle>
               <DialogDescription className="text-white/60">
-                Tell us a little about yourself. (Demo form — submitted locally, no redirect.)
+                Tell us a little about yourself. Your details are saved and shared with our
+                recruitment team.
               </DialogDescription>
             </DialogHeader>
 

@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ApplyDialog } from "@/components/ApplyDialog"
 import { JobDescription } from "@/components/JobDescription"
-import { formatDate, getJobById, locationString } from "@/data/jobs"
+import { formatDate, locationString } from "@/data/jobs"
+import { useJobById } from "@/lib/crm-store"
 
 export function JobDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const job = id ? getJobById(id) : undefined
+  const job = useJobById(id)
 
   if (!job) {
     return (
