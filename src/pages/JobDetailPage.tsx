@@ -40,6 +40,8 @@ export function JobDetailPage() {
             <Card className="p-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="space-y-3">
+                  {/* Short accent line, echoing the GMG homepage card motif */}
+                  <span className="block h-0.5 w-8 rounded-full bg-gmg-gold" />
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="secondary">{job.department}</Badge>
                     <Badge variant="outline">{job.jobType}</Badge>

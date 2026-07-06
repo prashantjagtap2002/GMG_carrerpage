@@ -7,8 +7,10 @@ import { formatDate, locationString, type Job } from "@/data/jobs"
 
 export function JobCard({ job }: { job: Job }) {
   return (
-    <Card className="group flex flex-col gap-4 p-5 transition-all hover:border-primary/40 hover:shadow-md md:flex-row md:items-center md:justify-between">
+    <Card className="group flex flex-col gap-4 p-5 transition-all hover:border-gmg-gold/50 hover:shadow-[0_0_24px_rgba(255,180,0,0.07)] md:flex-row md:items-center md:justify-between">
       <div className="space-y-2">
+        {/* Short accent line, echoing the GMG homepage card motif */}
+        <span className="block h-0.5 w-7 rounded-full bg-gmg-gold/80 transition-all group-hover:w-10 group-hover:bg-gmg-gold" />
         <Link
           to={`/jobs/${job.id}`}
           target="_blank"

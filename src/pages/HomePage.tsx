@@ -68,10 +68,15 @@ export function HomePage() {
 
   return (
     <main id="jobs">
-      <section id="open-roles" className="border-b bg-secondary/40">
-        <div className="container py-12 text-center">
-          <h2 className="text-3xl font-bold tracking-tight">Discover Career Opportunities at GMG</h2>
-          <p className="mt-2 text-muted-foreground">
+      {/* GMG-style section heading: bold, centered, on the black canvas with the
+          brand's short gold accent line (echoes the card accents on gautammodigroup.com). */}
+      <section id="open-roles">
+        <div className="container pb-4 pt-16 text-center">
+          <span className="mx-auto mb-5 block h-1 w-12 rounded-full bg-gmg-gold" />
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            Discover Career Opportunities at GMG
+          </h2>
+          <p className="mt-3 text-muted-foreground">
             Find your next role and apply directly, with no redirects.
           </p>
         </div>
