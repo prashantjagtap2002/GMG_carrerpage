@@ -27,7 +27,7 @@ export function Footer() {
           <div>
             <img src={GMG_LOGO} alt="Gautam Modi Group" className="h-12 w-auto" />
             <p className="mt-4 max-w-sm text-sm text-white/60">
-              We embrace new opportunities that inspire growth, innovation, and progress — across a
+              We embrace new opportunities that inspire growth, innovation, and progress across a
               portfolio of leading automotive brands.
             </p>
             <div className="mt-6 flex gap-3">

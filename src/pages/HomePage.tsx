@@ -72,7 +72,7 @@ export function HomePage() {
         <div className="container py-12 text-center">
           <h2 className="text-3xl font-bold tracking-tight">Discover Career Opportunities at GMG</h2>
           <p className="mt-2 text-muted-foreground">
-            Find your next role and apply directly — no redirects.
+            Find your next role and apply directly, with no redirects.
           </p>
         </div>
       </section>
@@ -100,7 +100,7 @@ export function HomePage() {
                 <SelectContent>
                   <SelectItem value="newest">Newest first</SelectItem>
                   <SelectItem value="oldest">Oldest first</SelectItem>
-                  <SelectItem value="title">Title A–Z</SelectItem>
+                  <SelectItem value="title">Title A to Z</SelectItem>
                 </SelectContent>
               </Select>
             </div>

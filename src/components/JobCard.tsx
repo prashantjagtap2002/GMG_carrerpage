@@ -42,7 +42,7 @@ export function JobCard({ job }: { job: Job }) {
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        {/* LOCAL route — opens the job detail in a new tab, no redirect to IIDE/Zoho */}
+        {/* LOCAL route: opens the job detail in a new tab, no redirect to IIDE/Zoho */}
         <Button asChild>
           <Link to={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer">
             I'm interested

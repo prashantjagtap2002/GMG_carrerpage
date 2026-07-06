@@ -1,5 +1,6 @@
 import { ArrowDown, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import heroTeam from "@/assets/hero-team.jpg"
 
 const GMG_LOGO =
   "https://bunny-wp-pullzone-cghvklkcns.b-cdn.net/wp-content/uploads/2026/01/Untitled-design-32.png"
@@ -9,11 +10,11 @@ export function Hero() {
     <section className="relative isolate overflow-hidden bg-gmg-black">
       <div className="absolute inset-0 -z-10">
         <img
-          src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2400&q=80"
-          alt=""
-          className="h-full w-full object-cover opacity-50"
+          src={heroTeam}
+          alt="The Gautam Modi Group team"
+          className="h-full w-full object-cover object-top"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/75 to-black/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/65 to-black/90" />
       </div>
       <div className="container py-28 text-white md:py-36">
         <div className="mx-auto max-w-3xl text-center">
@@ -31,7 +32,7 @@ export function Hero() {
             Gautam Modi Group is one of India's fast-growing automotive groups, representing leading
             brands including Audi, Mahindra, Hyundai, Kia and MG. Join a high-growth organisation
             offering exciting career opportunities across sales, service, operations, finance, HR,
-            marketing and leadership — backed by hands-on learning, strong industry partnerships, and
+            marketing and leadership, backed by hands-on learning, strong industry partnerships, and
             accelerated career growth.
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-3">

@@ -30,8 +30,8 @@ async function openResume(app: Application) {
     if (!stored) {
       window.alert(
         "No résumé file is stored for this application.\n\n" +
-          "It may have been submitted before file storage was added, or from a different browser/device — " +
-          "only the file name was recorded in that case.",
+          "It may have been submitted before file storage was added, or from a different browser/device, " +
+          "so only the file name was recorded in that case.",
       )
       return
     }
@@ -45,7 +45,7 @@ async function openResume(app: Application) {
 }
 
 function fullName(a: Application) {
-  return [a.firstName, a.lastName].filter(Boolean).join(" ") || "—"
+  return [a.firstName, a.lastName].filter(Boolean).join(" ") || "-"
 }
 
 function csvCell(v: string) {
@@ -209,9 +209,9 @@ export function ApplicationsManager() {
                     <div className="font-medium">{fullName(a)}</div>
                     <div className="text-xs text-muted-foreground">{a.email}</div>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{a.jobTitle || "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{a.country || "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{a.source || "—"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{a.jobTitle || "-"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{a.country || "-"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{a.source || "-"}</td>
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(a.submittedAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
@@ -249,7 +249,7 @@ function ApplicationDetail({ app, onClose }: { app: Application | null; onClose:
             <DialogHeader>
               <DialogTitle>{fullName(app)}</DialogTitle>
               <DialogDescription>
-                Applied for <span className="font-medium text-foreground">{app.jobTitle || "—"}</span>{" "}
+                Applied for <span className="font-medium text-foreground">{app.jobTitle || "-"}</span>{" "}
                 · {formatDate(app.submittedAt)}
               </DialogDescription>
             </DialogHeader>
@@ -272,7 +272,7 @@ function ApplicationDetail({ app, onClose }: { app: Application | null; onClose:
                   Message
                 </p>
                 <p className="mt-1 whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-foreground/90">
-                  {app.message || "—"}
+                  {app.message || "-"}
                 </p>
               </div>
               <div className="flex flex-wrap justify-between gap-2 pt-2">
@@ -309,7 +309,7 @@ function DetailField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-foreground/90">{value || "—"}</dd>
+      <dd className="mt-0.5 text-foreground/90">{value || "-"}</dd>
     </div>
   )
 }

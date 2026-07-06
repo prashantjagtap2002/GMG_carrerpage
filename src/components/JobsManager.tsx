@@ -155,9 +155,9 @@ function Row({
     <tr className="hover:bg-muted/30">
       <td className="px-4 py-3 font-medium">{job.title}</td>
       <td className="px-4 py-3 text-muted-foreground">{job.department}</td>
-      <td className="px-4 py-3 text-muted-foreground">{locationString(job) || "—"}</td>
+      <td className="px-4 py-3 text-muted-foreground">{locationString(job) || "-"}</td>
       <td className="px-4 py-3 text-muted-foreground">{job.jobType}</td>
-      <td className="px-4 py-3 text-muted-foreground">{formatDate(job.dateOpened) || "—"}</td>
+      <td className="px-4 py-3 text-muted-foreground">{formatDate(job.dateOpened) || "-"}</td>
       <td className="px-4 py-3">
         {isCustom ? <Badge variant="secondary">CRM</Badge> : <Badge variant="outline">Seeded</Badge>}
       </td>

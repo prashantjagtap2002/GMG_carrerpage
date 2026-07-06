@@ -16,7 +16,7 @@ function ScrollToTop() {
   return null
 }
 
-// Public pages render without the marketing header/footer chrome — a clean,
+// Public pages render without the marketing header/footer chrome: a clean,
 // embeddable careers surface (IIDE-style). Admin lives at /admin.
 function PublicLayout({ children }: { children: ReactNode }) {
   return <>{children}</>
@@ -27,7 +27,7 @@ export default function App() {
     <div className="flex min-h-screen flex-col">
       <ScrollToTop />
       <Routes>
-        {/* Mini CRM — standalone admin dashboard (no marketing chrome) */}
+        {/* Mini CRM: standalone admin dashboard (no marketing chrome) */}
         <Route path="/admin" element={<AdminPage />} />
         <Route
           path="/"
@@ -38,7 +38,7 @@ export default function App() {
             </PublicLayout>
           }
         />
-        {/* Local job detail route — keeps users on this site, no redirect to IIDE/Zoho */}
+        {/* Local job detail route: keeps users on this site, no redirect to IIDE/Zoho */}
         <Route
           path="/jobs/:id"
           element={

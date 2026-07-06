@@ -16,6 +16,9 @@ import { saveResume } from "@/lib/resume-store"
 const inputCls =
   "h-11 w-full rounded-md border border-white/15 bg-white/[0.04] px-3 text-sm text-white placeholder:text-white/40 [color-scheme:dark] focus:border-gmg-gold focus:outline-none focus:ring-1 focus:ring-gmg-gold"
 const labelCls = "mb-1.5 block text-sm font-semibold text-white"
+// Native <option> elements render on the OS default (white) list background;
+// force a dark background + light text so the text stays visible when open.
+const optionCls = "bg-gmg-dark text-white"
 
 const countries = [
   "India",
@@ -129,7 +132,7 @@ export function ApplyDialog({ job }: { job: Job }) {
             <p className="text-sm text-white/70">
               Thanks for your interest in{" "}
               <span className="font-medium text-white">{job.title}</span>. Your application has been
-              recorded — our recruitment team will reach out to you soon.
+              recorded, and our recruitment team will reach out to you soon.
             </p>
             <Button
               variant="outline"
@@ -183,7 +186,7 @@ export function ApplyDialog({ job }: { job: Job }) {
                 <Field label="Job You're Applying For" required htmlFor="applyingFor">
                   <SelectField id="applyingFor" name="applyingFor" required defaultValue={job.title}>
                     {jobTitles.map((t) => (
-                      <option key={t} value={t}>
+                      <option key={t} value={t} className={optionCls}>
                         {t}
                       </option>
                     ))}
@@ -192,11 +195,11 @@ export function ApplyDialog({ job }: { job: Job }) {
 
                 <Field label="Country" required htmlFor="country">
                   <SelectField id="country" name="country" required defaultValue="">
-                    <option value="" disabled>
+                    <option value="" disabled className={optionCls}>
                       Select Country
                     </option>
                     {countries.map((c) => (
-                      <option key={c} value={c}>
+                      <option key={c} value={c} className={optionCls}>
                         {c}
                       </option>
                     ))}
@@ -209,11 +212,11 @@ export function ApplyDialog({ job }: { job: Job }) {
 
               <Field label="How did you find GMG?" required htmlFor="source">
                 <SelectField id="source" name="source" required defaultValue="">
-                  <option value="" disabled>
+                  <option value="" disabled className={optionCls}>
                     Select a source
                   </option>
                   {sources.map((s) => (
-                    <option key={s} value={s}>
+                    <option key={s} value={s} className={optionCls}>
                       {s}
                     </option>
                   ))}
@@ -228,7 +231,7 @@ export function ApplyDialog({ job }: { job: Job }) {
                   accept=".pdf,.doc,.docx"
                   className="w-full rounded-md border border-white/15 bg-white/[0.04] px-3 py-2.5 text-sm text-white/70 file:mr-3 file:cursor-pointer file:rounded file:border-0 file:bg-gmg-gold file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-black hover:file:bg-gmg-gold/90"
                 />
-                <p className="mt-1.5 text-xs text-white/40">PDF, DOC or DOCX — max ~5MB.</p>
+                <p className="mt-1.5 text-xs text-white/40">PDF, DOC or DOCX. Max 5MB.</p>
               </Field>
 
               <Field label="Your Message" required htmlFor="message">
