@@ -3,6 +3,7 @@ import { Route, Routes, useLocation } from "react-router-dom"
 import { Hero } from "@/components/Hero"
 import { HomePage } from "@/pages/HomePage"
 import { JobDetailPage } from "@/pages/JobDetailPage"
+import { ApplyPage } from "@/pages/ApplyPage"
 import { AdminPage } from "@/pages/AdminPage"
 
 // Remember the scroll position of each route so navigation feels natural:
@@ -61,6 +62,15 @@ export default function App() {
           element={
             <PublicLayout>
               <JobDetailPage />
+            </PublicLayout>
+          }
+        />
+        {/* Full-page application form for a specific job. */}
+        <Route
+          path="/jobs/:id/apply"
+          element={
+            <PublicLayout>
+              <ApplyPage />
             </PublicLayout>
           }
         />

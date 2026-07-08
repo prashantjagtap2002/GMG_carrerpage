@@ -3,7 +3,6 @@ import { ArrowLeft, Briefcase, Building2, Clock, MapPin, Share2 } from "lucide-r
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ApplyDialog } from "@/components/ApplyDialog"
 import { JobDescription } from "@/components/JobDescription"
 import { formatDate, locationString } from "@/data/jobs"
 import { useJobById } from "@/lib/crm-store"
@@ -104,7 +103,11 @@ export function JobDetailPage() {
               <h3 className="text-sm font-semibold text-muted-foreground">Apply now</h3>
               <p className="mt-2 text-sm text-muted-foreground">Think this role is a fit? Apply directly here.</p>
               <div className="mt-4">
-                <ApplyDialog job={job} />
+                <Button asChild className="w-full">
+                  <Link to={`/jobs/${job.id}/apply`}>
+                    I'm interested
+                  </Link>
+                </Button>
               </div>
               <Button
                 variant="outline"
