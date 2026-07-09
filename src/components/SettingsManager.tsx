@@ -4,41 +4,18 @@ import {
   Check,
   Eye,
   EyeOff,
-  KeyRound,
-  LogOut,
-  RotateCcw,
-  ShieldCheck,
   UserCog,
 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import {
-  logout,
-  resetCredentials,
   updateCredentials,
   useCredentials,
 } from "@/lib/auth-store"
 
-type Section = "account" | "security"
 
-/** Human-friendly "time ago" for the last-credential-change timestamp. */
-function timeAgo(iso: string | null): string {
-  if (!iso) return "Never"
-  const then = new Date(iso).getTime()
-  if (Number.isNaN(then)) return "Never"
-  const diff = Date.now() - then
-  const mins = Math.round(diff / 60000)
-  if (mins < 1) return "Just now"
-  if (mins < 60) return `${mins} min${mins === 1 ? "" : "s"} ago`
-  const hrs = Math.round(mins / 60)
-  if (hrs < 24) return `${hrs} hour${hrs === 1 ? "" : "s"} ago`
-  const days = Math.round(hrs / 24)
-  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`
-  return new Date(iso).toLocaleDateString()
-}
 
 /** 0-4 strength score from a candidate password (length + variety). */
 function passwordScore(pw: string): number {
@@ -63,8 +40,6 @@ const STRENGTH_COLORS = ["bg-muted", "bg-gmg-red", "bg-amber-500", "bg-lime-500"
  * a slim section nav on the left and the active section's card(s) on the right.
  */
 export function SettingsManager() {
-  const current = useCredentials()
-  const isCustom = current.lastChangedAt !== null
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -251,14 +226,7 @@ function CredentialsSection() {
 
 /* Small presentational helpers. */
 
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bg-card p-4">
-      <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="mt-1 truncate text-sm font-medium">{value}</dd>
-    </div>
-  )
-}
+
 
 function PasswordField({
   id,
