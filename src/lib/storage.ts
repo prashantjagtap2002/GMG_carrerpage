@@ -99,7 +99,7 @@ export function saveCustomJobs(jobs: CustomJob[]): void {
 }
 
 /** Fills in stage/stageHistory for applications saved before the pipeline feature existed. */
-function normalizeApplication(a: Application): Application {
+export function normalizeApplication(a: Application): Application {
   const stage = a.stage ?? DEFAULT_STAGE
   const stageHistory =
     Array.isArray(a.stageHistory) && a.stageHistory.length > 0

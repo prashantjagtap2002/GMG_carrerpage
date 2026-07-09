@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react"
-import { Download, Eye, Search, Trash2 } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { Download, Eye, RefreshCw, Search, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ApplicationDetail } from "@/components/ApplicationDetail"
-import { clearApplications, deleteApplication, useApplications } from "@/lib/crm-store"
+import { clearApplications, deleteApplication, refreshApplications, useApplications } from "@/lib/crm-store"
 import { deleteResume } from "@/lib/resume-store"
 import { applicantName, type Application } from "@/lib/storage"
 import { usePipelineStore } from "@/lib/pipeline"
@@ -68,6 +68,20 @@ export function ApplicationsManager() {
   const [query, setQuery] = useState("")
   const [jobFilter, setJobFilter] = useState("all")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+
+  // Applications live in Supabase — poll while this tab is open so a
+  // submission from another device shows up without a manual reload.
+  useEffect(() => {
+    const interval = setInterval(() => void refreshApplications(), 20_000)
+    return () => clearInterval(interval)
+  }, [])
+
+  async function handleRefresh() {
+    setRefreshing(true)
+    await refreshApplications()
+    setRefreshing(false)
+  }
 
   const selectedApp = useMemo(() => apps.find((a) => a.id === selectedId) ?? null, [apps, selectedId])
 
@@ -125,6 +139,9 @@ export function ApplicationsManager() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} /> Refresh
+          </Button>
           <Button
             variant="outline"
             onClick={() => exportCSV(filtered)}

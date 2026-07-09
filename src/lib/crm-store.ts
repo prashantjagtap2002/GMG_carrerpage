@@ -12,6 +12,7 @@ import {
   loadHiddenIds,
   loadNotes,
   loadOverrides,
+  normalizeApplication,
   saveApplications,
   saveCustomJobs,
   saveHiddenIds,
@@ -24,6 +25,52 @@ import {
   type JobOverride,
   type Note,
 } from "@/lib/storage"
+
+// ---- Supabase sync (via Netlify Functions) ----
+// Applications & notes are shared across devices through Supabase; jobs stay
+// local-only. localStorage is kept as an offline cache so the UI still has
+// something to show before the first fetch resolves.
+
+const FN_BASE = "/.netlify/functions"
+
+async function postJSON(path: string, body: unknown): Promise<void> {
+  try {
+    await fetch(`${FN_BASE}/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+  } catch (err) {
+    console.error(`Failed to sync (${path}):`, err)
+  }
+}
+
+async function deleteJSON(path: string, body: unknown): Promise<void> {
+  try {
+    await fetch(`${FN_BASE}/${path}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+  } catch (err) {
+    console.error(`Failed to sync delete (${path}):`, err)
+  }
+}
+
+/** Pull the current applications/notes from Supabase so every device agrees. */
+export async function refreshApplications(): Promise<void> {
+  try {
+    const res = await fetch(`${FN_BASE}/applications-list`)
+    if (!res.ok) throw new Error(`applications-list responded ${res.status}`)
+    const body = (await res.json()) as { applications: Application[]; notes: Note[] }
+    const applications = body.applications.map(normalizeApplication)
+    setState({ ...state, applications, notes: body.notes })
+    saveApplications(applications)
+    saveNotes(body.notes)
+  } catch (err) {
+    console.error("Failed to fetch applications from Supabase:", err)
+  }
+}
 
 type CrmState = {
   customJobs: CustomJob[]
@@ -85,6 +132,10 @@ if (typeof window !== "undefined") {
       emit()
     }
   })
+
+  // Applications/notes live in Supabase now — pull the shared list on load so
+  // this device shows what every other device has submitted.
+  void refreshApplications()
 }
 
 /**
@@ -175,6 +226,11 @@ export function addApplication(
   const applications = [app, ...state.applications]
   setState({ ...state, applications })
   saveApplications(applications)
+
+  const workerUrl = (import.meta.env.VITE_RESUME_WORKER_URL || "").replace(/\/+$/, "")
+  const resumeLink = app.resumeName && workerUrl ? `${workerUrl}/resumes/${app.id}` : ""
+  void postJSON("apply", { ...app, resumeLink })
+
   return app
 }
 
@@ -184,12 +240,15 @@ export function deleteApplication(id: string) {
   setState({ ...state, applications, notes })
   saveApplications(applications)
   saveNotes(notes)
+  void postJSON("application-delete", { id })
 }
 
 export function clearApplications() {
+  const ids = state.applications.map((a) => a.id)
   setState({ ...state, applications: [], notes: [] })
   saveApplications([])
   saveNotes([])
+  if (ids.length > 0) void postJSON("application-delete", { ids })
 }
 
 /** Move an application to a new pipeline stage, recording the transition in its timeline. */
@@ -201,6 +260,9 @@ export function updateApplicationStage(id: string, stage: ApplicationStage) {
   )
   setState({ ...state, applications })
   saveApplications(applications)
+
+  const updated = applications.find((a) => a.id === id)
+  if (updated) void postJSON("application-stage", { id, stage: updated.stage, stageHistory: updated.stageHistory })
 }
 
 export function addNote(applicationId: string, text: string): Note {
@@ -208,6 +270,7 @@ export function addNote(applicationId: string, text: string): Note {
   const notes = [note, ...state.notes]
   setState({ ...state, notes })
   saveNotes(notes)
+  void postJSON("notes", note)
   return note
 }
 
@@ -215,6 +278,7 @@ export function deleteNote(id: string) {
   const notes = state.notes.filter((n) => n.id !== id)
   setState({ ...state, notes })
   saveNotes(notes)
+  void deleteJSON("notes", { id })
 }
 
 // ---- Hooks ----

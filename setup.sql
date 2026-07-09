@@ -14,5 +14,17 @@ CREATE TABLE IF NOT EXISTS applications (
   resume_name VARCHAR(255),
   resume_link VARCHAR(255),
   submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  stage VARCHAR(50) NOT NULL
+  stage VARCHAR(50) NOT NULL,
+  stage_history JSONB NOT NULL DEFAULT '[]'::jsonb
+);
+
+-- Re-running this file is safe: adds the column if it's missing on a table
+-- created before stage/notes syncing existed.
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS stage_history JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+CREATE TABLE IF NOT EXISTS notes (
+  id VARCHAR(255) PRIMARY KEY,
+  application_id VARCHAR(255) NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+  text TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

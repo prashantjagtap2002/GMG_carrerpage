@@ -1,62 +1,41 @@
-import { Handler } from '@netlify/functions'
-import pg from 'pg'
+import { Handler } from "@netlify/functions"
+import { getSupabase, jsonResponse } from "./_supabase"
 
-const { Client } = pg
-
-const handler: Handler = async (event, context) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' }
+const handler: Handler = async (event) => {
+  if (event.httpMethod !== "POST") {
+    return { statusCode: 405, body: "Method Not Allowed" }
   }
 
   try {
-    const data = JSON.parse(event.body || '{}')
-    
-    // Connect to Supabase
-    // URL-encoding special characters in the password
-    const connectionString = 'postgresql://postgres:Qn%3F%409%40Rivkzcwjv@db.hhkrkehvtuzukwxxuoyo.supabase.co:5432/postgres'
-    
-    const client = new Client({ connectionString })
-    await client.connect()
+    const data = JSON.parse(event.body || "{}")
+    const supabase = getSupabase()
 
-    const query = `
-      INSERT INTO applications (
-        id, job_id, job_title, first_name, last_name, email, company, 
-        current_title, country, website, source, message, resume_name, resume_link, stage
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
-      )
-    `
-    const values = [
-      data.id,
-      data.jobId,
-      data.jobTitle,
-      data.firstName,
-      data.lastName,
-      data.email,
-      data.company,
-      data.currentTitle,
-      data.country,
-      data.website,
-      data.source,
-      data.message,
-      data.resumeName,
-      data.resumeLink,
-      data.stage || 'New'
-    ]
+    const { error } = await supabase.from("applications").insert({
+      id: data.id,
+      job_id: data.jobId,
+      job_title: data.jobTitle,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      company: data.company,
+      current_title: data.currentTitle,
+      country: data.country,
+      website: data.website,
+      source: data.source,
+      message: data.message,
+      resume_name: data.resumeName,
+      resume_link: data.resumeLink,
+      submitted_at: data.submittedAt,
+      stage: data.stage || "new",
+      stage_history: data.stageHistory || [],
+    })
 
-    await client.query(query, values)
-    await client.end()
+    if (error) throw error
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ success: true })
-    }
+    return jsonResponse(200, { success: true })
   } catch (error) {
-    console.error('Error inserting application:', error)
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Internal Server Error' })
-    }
+    console.error("Error inserting application:", error)
+    return jsonResponse(500, { error: "Internal Server Error" })
   }
 }
 

@@ -109,23 +109,6 @@ function ApplyForm({ job, onSubmitted }: { job: Job; onSubmitted: () => void }) 
     
     if (resume) await saveResume(created.id, resume)
 
-    // Sync to Supabase via Netlify function
-    const WORKER_URL = (import.meta.env.VITE_RESUME_WORKER_URL || "").replace(/\/+$/, "")
-    const resumeLink = resume && WORKER_URL ? `${WORKER_URL}/resumes/${created.id}` : ""
-    
-    try {
-      await fetch('/.netlify/functions/apply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...created,
-          resumeLink
-        })
-      })
-    } catch (err) {
-      console.error("Failed to sync to Supabase:", err)
-    }
-
     onSubmitted()
   }
 
