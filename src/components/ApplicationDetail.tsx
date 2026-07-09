@@ -153,7 +153,7 @@ export function ApplicationDetail({
       </div>
 
       {/* Pipeline */}
-      <div className="flex w-full overflow-hidden rounded-full border border-gray-200">
+      <div className="flex w-full overflow-hidden rounded-full border border-border">
         {stages.map((s) => {
           const isActive = app.stage === s.id
           return (
@@ -162,13 +162,13 @@ export function ApplicationDetail({
               type="button"
               onClick={() => updateApplicationStage(app.id, s.id)}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium transition-colors border-r last:border-r-0 border-gray-200",
+                "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium transition-colors border-r last:border-r-0 border-border",
                 isActive
-                  ? "bg-blue-50/50 text-blue-600"
-                  : "bg-transparent text-gray-500 hover:bg-gray-50/50 hover:text-gray-900"
+                  ? "bg-primary/20 text-primary"
+                  : "bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
-              <span className={cn("h-1.5 w-1.5 rounded-full", isActive ? "bg-blue-600" : "bg-gray-400")} />
+              <span className={cn("h-1.5 w-1.5 rounded-full", isActive ? "bg-primary" : "bg-muted-foreground/50")} />
               {s.label}
             </button>
           )

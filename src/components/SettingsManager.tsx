@@ -7,7 +7,8 @@ import {
   UserCog,
   Trash2,
   Plus,
-  GripVertical
+  ArrowUp,
+  ArrowDown
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -232,7 +233,7 @@ function CredentialsSection() {
 /* Pipeline Settings - manage customizable stages */
 
 function PipelineSettingsSection() {
-  const { stages, addStage, deleteStage } = usePipelineStore()
+  const { stages, addStage, deleteStage, reorderStages } = usePipelineStore()
   const [newStageName, setNewStageName] = useState("")
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [deletePin, setDeletePin] = useState("")
@@ -271,21 +272,40 @@ function PipelineSettingsSection() {
       </div>
       <div className="p-4 sm:p-6 space-y-4">
         <ul className="space-y-2">
-          {stages.map((stage) => (
+          {stages.map((stage, i) => (
             <li key={stage.id} className="flex items-center justify-between rounded-md border p-3">
               <div className="flex items-center gap-3">
-                <GripVertical className="h-4 w-4 text-muted-foreground opacity-50 cursor-grab" />
                 <span className={`h-2 w-2 rounded-full ${stage.color}`} />
                 <span className="font-medium">{stage.label}</span>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => initiateDelete(stage.id)}
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => i > 0 && reorderStages(i, i - 1)}
+                  disabled={i === 0}
+                  className="h-8 w-8 text-muted-foreground"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => i < stages.length - 1 && reorderStages(i, i + 1)}
+                  disabled={i === stages.length - 1}
+                  className="h-8 w-8 text-muted-foreground"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => initiateDelete(stage.id)}
+                  className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
