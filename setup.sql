@@ -28,3 +28,32 @@ CREATE TABLE IF NOT EXISTS notes (
   text TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Job descriptions added via the CRM. Publicly readable (the careers site
+-- lists these to every visitor); only writable by an authenticated admin.
+CREATE TABLE IF NOT EXISTS custom_jobs (
+  id VARCHAR(255) PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  department VARCHAR(255),
+  city VARCHAR(255),
+  state VARCHAR(255),
+  country VARCHAR(255),
+  job_type VARCHAR(255),
+  experience VARCHAR(255),
+  date_opened VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Per-job edits layered on top of the read-only seeded catalogue, keyed by
+-- the seeded job's id. `patch` holds only the changed fields (camelCase,
+-- matching the frontend Job type).
+CREATE TABLE IF NOT EXISTS job_overrides (
+  job_id VARCHAR(255) PRIMARY KEY,
+  patch JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+
+-- Seeded job ids the admin has deleted (hidden from the public portal).
+CREATE TABLE IF NOT EXISTS hidden_jobs (
+  job_id VARCHAR(255) PRIMARY KEY
+);

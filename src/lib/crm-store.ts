@@ -27,49 +27,80 @@ import {
 } from "@/lib/storage"
 
 // ---- Supabase sync (via Netlify Functions) ----
-// Applications & notes are shared across devices through Supabase; jobs stay
-// local-only. localStorage is kept as an offline cache so the UI still has
-// something to show before the first fetch resolves.
+// Jobs are public (the careers site lists them to every visitor); applications
+// & notes are admin-only. localStorage is kept as an offline cache so the UI
+// still has something to show before the first fetch resolves.
 
 const FN_BASE = "/.netlify/functions"
 
-async function postJSON(path: string, body: unknown): Promise<void> {
+/**
+ * Current Clerk session token, if any. Read via the `window.Clerk` global
+ * rather than the `useAuth()` hook so plain store functions (not just React
+ * components) can attach it — it's `null` for signed-out/public visitors,
+ * which is fine for public endpoints and fails auth (as intended) on
+ * protected ones.
+ */
+async function getAuthToken(): Promise<string | null> {
+  if (typeof window === "undefined") return null
   try {
-    await fetch(`${FN_BASE}/${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    })
-  } catch (err) {
-    console.error(`Failed to sync (${path}):`, err)
+    const clerk = (window as unknown as { Clerk?: { session?: { getToken(): Promise<string | null> } } }).Clerk
+    if (!clerk?.session) return null
+    return await clerk.session.getToken()
+  } catch {
+    return null
   }
 }
 
-async function deleteJSON(path: string, body: unknown): Promise<void> {
+async function syncFetch(path: string, method: string, body?: unknown): Promise<void> {
   try {
+    const token = await getAuthToken()
     await fetch(`${FN_BASE}/${path}`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
     })
   } catch (err) {
-    console.error(`Failed to sync delete (${path}):`, err)
+    console.error(`Failed to sync (${method} ${path}):`, err)
   }
 }
 
-/** Pull the current applications/notes from Supabase so every device agrees. */
+async function fetchJSON<T>(path: string): Promise<T | undefined> {
+  try {
+    const token = await getAuthToken()
+    const res = await fetch(`${FN_BASE}/${path}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
+    if (!res.ok) throw new Error(`${path} responded ${res.status}`)
+    return (await res.json()) as T
+  } catch (err) {
+    console.error(`Failed to fetch (${path}):`, err)
+    return undefined
+  }
+}
+
+/** Pull the current job catalogue from Supabase — public, every visitor needs it. */
+export async function refreshJobs(): Promise<void> {
+  const body = await fetchJSON<{ customJobs: CustomJob[]; overrides: Record<string, JobOverride>; hiddenIds: string[] }>(
+    "jobs-list",
+  )
+  if (!body) return
+  setState({ ...state, customJobs: body.customJobs, overrides: body.overrides, hiddenIds: body.hiddenIds })
+  saveCustomJobs(body.customJobs)
+  saveOverrides(body.overrides)
+  saveHiddenIds(body.hiddenIds)
+}
+
+/** Pull the current applications/notes from Supabase — admin-only, called from the CRM. */
 export async function refreshApplications(): Promise<void> {
-  try {
-    const res = await fetch(`${FN_BASE}/applications-list`)
-    if (!res.ok) throw new Error(`applications-list responded ${res.status}`)
-    const body = (await res.json()) as { applications: Application[]; notes: Note[] }
-    const applications = body.applications.map(normalizeApplication)
-    setState({ ...state, applications, notes: body.notes })
-    saveApplications(applications)
-    saveNotes(body.notes)
-  } catch (err) {
-    console.error("Failed to fetch applications from Supabase:", err)
-  }
+  const body = await fetchJSON<{ applications: Application[]; notes: Note[] }>("applications-list")
+  if (!body) return
+  const applications = body.applications.map(normalizeApplication)
+  setState({ ...state, applications, notes: body.notes })
+  saveApplications(applications)
+  saveNotes(body.notes)
 }
 
 type CrmState = {
@@ -133,9 +164,11 @@ if (typeof window !== "undefined") {
     }
   })
 
-  // Applications/notes live in Supabase now — pull the shared list on load so
-  // this device shows what every other device has submitted.
-  void refreshApplications()
+  // Jobs live in Supabase now and are public — pull the shared catalogue on
+  // load so every visitor (not just admins) sees the current listings.
+  // Applications/notes are admin-only and refreshed explicitly by the CRM
+  // (see ApplicationsManager) once a Clerk session is available.
+  void refreshJobs()
 }
 
 /**
@@ -172,6 +205,7 @@ export function addJob(input: Omit<CustomJob, "id" | "createdAt">): CustomJob {
   const customJobs = [job, ...state.customJobs]
   setState({ ...state, customJobs })
   saveCustomJobs(customJobs)
+  void syncFetch("jobs-custom", "POST", job)
   return job
 }
 
@@ -181,10 +215,12 @@ export function updateJob(id: string, patch: Partial<Omit<Job, "id">>) {
     const customJobs = state.customJobs.map((j) => (j.id === id ? { ...j, ...patch } : j))
     setState({ ...state, customJobs })
     saveCustomJobs(customJobs)
+    void syncFetch("jobs-custom", "PATCH", { id, patch })
   } else {
     const overrides = { ...state.overrides, [id]: { ...state.overrides[id], ...patch } }
     setState({ ...state, overrides })
     saveOverrides(overrides)
+    void syncFetch("jobs-override", "PUT", { jobId: id, patch: overrides[id] })
   }
 }
 
@@ -194,6 +230,7 @@ export function deleteJob(id: string) {
     const customJobs = state.customJobs.filter((j) => j.id !== id)
     setState({ ...state, customJobs })
     saveCustomJobs(customJobs)
+    void syncFetch("jobs-custom", "DELETE", { id })
   } else {
     const hiddenIds = state.hiddenIds.includes(id) ? state.hiddenIds : [...state.hiddenIds, id]
     // Drop any stale override for a now-deleted seeded job.
@@ -202,6 +239,8 @@ export function deleteJob(id: string) {
     setState({ ...state, hiddenIds, overrides })
     saveHiddenIds(hiddenIds)
     saveOverrides(overrides)
+    void syncFetch("jobs-hidden", "PUT", { jobId: id })
+    void syncFetch("jobs-override", "DELETE", { jobId: id })
   }
 }
 
@@ -210,6 +249,7 @@ export function resetSeededCustomizations() {
   setState({ ...state, overrides: {}, hiddenIds: [] })
   saveOverrides({})
   saveHiddenIds([])
+  void syncFetch("jobs-reset", "POST")
 }
 
 export function addApplication(
@@ -229,7 +269,7 @@ export function addApplication(
 
   const workerUrl = (import.meta.env.VITE_RESUME_WORKER_URL || "").replace(/\/+$/, "")
   const resumeLink = app.resumeName && workerUrl ? `${workerUrl}/resumes/${app.id}` : ""
-  void postJSON("apply", { ...app, resumeLink })
+  void syncFetch("apply", "POST", { ...app, resumeLink })
 
   return app
 }
@@ -240,7 +280,7 @@ export function deleteApplication(id: string) {
   setState({ ...state, applications, notes })
   saveApplications(applications)
   saveNotes(notes)
-  void postJSON("application-delete", { id })
+  void syncFetch("application-delete", "POST", { id })
 }
 
 export function clearApplications() {
@@ -248,7 +288,7 @@ export function clearApplications() {
   setState({ ...state, applications: [], notes: [] })
   saveApplications([])
   saveNotes([])
-  if (ids.length > 0) void postJSON("application-delete", { ids })
+  if (ids.length > 0) void syncFetch("application-delete", "POST", { ids })
 }
 
 /** Move an application to a new pipeline stage, recording the transition in its timeline. */
@@ -262,7 +302,7 @@ export function updateApplicationStage(id: string, stage: ApplicationStage) {
   saveApplications(applications)
 
   const updated = applications.find((a) => a.id === id)
-  if (updated) void postJSON("application-stage", { id, stage: updated.stage, stageHistory: updated.stageHistory })
+  if (updated) void syncFetch("application-stage", "POST", { id, stage: updated.stage, stageHistory: updated.stageHistory })
 }
 
 export function addNote(applicationId: string, text: string): Note {
@@ -270,7 +310,7 @@ export function addNote(applicationId: string, text: string): Note {
   const notes = [note, ...state.notes]
   setState({ ...state, notes })
   saveNotes(notes)
-  void postJSON("notes", note)
+  void syncFetch("notes", "POST", note)
   return note
 }
 
@@ -278,7 +318,7 @@ export function deleteNote(id: string) {
   const notes = state.notes.filter((n) => n.id !== id)
   setState({ ...state, notes })
   saveNotes(notes)
-  void deleteJSON("notes", { id })
+  void syncFetch("notes", "DELETE", { id })
 }
 
 // ---- Hooks ----

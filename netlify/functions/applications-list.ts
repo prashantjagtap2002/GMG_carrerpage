@@ -1,9 +1,13 @@
 import { Handler } from "@netlify/functions"
 import { getSupabase, jsonResponse } from "./_supabase"
+import { isAuthed } from "./_auth"
 
 const handler: Handler = async (event) => {
   if (event.httpMethod !== "GET") {
     return { statusCode: 405, body: "Method Not Allowed" }
+  }
+  if (!(await isAuthed(event))) {
+    return jsonResponse(401, { error: "Unauthorized" })
   }
 
   try {

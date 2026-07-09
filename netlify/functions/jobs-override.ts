@@ -2,6 +2,7 @@ import { Handler } from "@netlify/functions"
 import { getSupabase, jsonResponse } from "./_supabase"
 import { isAuthed } from "./_auth"
 
+// Admin-only: upsert/remove an edit layered on top of a seeded job.
 const handler: Handler = async (event) => {
   if (!(await isAuthed(event))) {
     return jsonResponse(401, { error: "Unauthorized" })
@@ -9,30 +10,26 @@ const handler: Handler = async (event) => {
 
   try {
     const supabase = getSupabase()
+    const data = JSON.parse(event.body || "{}")
+    if (!data.jobId) return jsonResponse(400, { error: "Missing jobId" })
 
-    if (event.httpMethod === "POST") {
-      const data = JSON.parse(event.body || "{}")
-      const { error } = await supabase.from("notes").insert({
-        id: data.id,
-        application_id: data.applicationId,
-        text: data.text,
-        created_at: data.createdAt,
-      })
+    if (event.httpMethod === "PUT") {
+      const { error } = await supabase
+        .from("job_overrides")
+        .upsert({ job_id: data.jobId, patch: data.patch || {} })
       if (error) throw error
       return jsonResponse(200, { success: true })
     }
 
     if (event.httpMethod === "DELETE") {
-      const data = JSON.parse(event.body || "{}")
-      if (!data.id) return jsonResponse(400, { error: "Missing id" })
-      const { error } = await supabase.from("notes").delete().eq("id", data.id)
+      const { error } = await supabase.from("job_overrides").delete().eq("job_id", data.jobId)
       if (error) throw error
       return jsonResponse(200, { success: true })
     }
 
     return { statusCode: 405, body: "Method Not Allowed" }
   } catch (error) {
-    console.error("Error handling note:", error)
+    console.error("Error handling job override:", error)
     return jsonResponse(500, { error: "Internal Server Error" })
   }
 }

@@ -2,6 +2,7 @@ import { Handler } from "@netlify/functions"
 import { getSupabase, jsonResponse } from "./_supabase"
 import { isAuthed } from "./_auth"
 
+// Admin-only: undo all seeded-job edits/deletions, restoring the original catalogue.
 const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" }
@@ -11,23 +12,16 @@ const handler: Handler = async (event) => {
   }
 
   try {
-    const data = JSON.parse(event.body || "{}")
     const supabase = getSupabase()
-
-    if (Array.isArray(data.ids)) {
-      if (data.ids.length === 0) return jsonResponse(200, { success: true })
-      const { error } = await supabase.from("applications").delete().in("id", data.ids)
-      if (error) throw error
-    } else if (data.id) {
-      const { error } = await supabase.from("applications").delete().eq("id", data.id)
-      if (error) throw error
-    } else {
-      return jsonResponse(400, { error: "Missing id/ids" })
-    }
-
+    const [{ error: overrideError }, { error: hiddenError }] = await Promise.all([
+      supabase.from("job_overrides").delete().not("job_id", "is", null),
+      supabase.from("hidden_jobs").delete().not("job_id", "is", null),
+    ])
+    if (overrideError) throw overrideError
+    if (hiddenError) throw hiddenError
     return jsonResponse(200, { success: true })
   } catch (error) {
-    console.error("Error deleting application(s):", error)
+    console.error("Error resetting job customizations:", error)
     return jsonResponse(500, { error: "Internal Server Error" })
   }
 }
