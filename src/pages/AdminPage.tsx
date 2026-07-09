@@ -1,38 +1,20 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { Briefcase, ExternalLink, LogOut, Users } from "lucide-react"
+import { Briefcase, ExternalLink, LogOut, Settings, Users, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { JobsManager } from "@/components/JobsManager"
 import { ApplicationsManager } from "@/components/ApplicationsManager"
-
-const ADMIN_PASSWORD = "admin123"
-const AUTH_KEY = "gmg-crm-authed"
+import { SettingsManager } from "@/components/SettingsManager"
+import { isAuthed, login, logout } from "@/lib/auth-store"
 
 const GMG_LOGO =
   "https://bunny-wp-pullzone-cghvklkcns.b-cdn.net/wp-content/uploads/2026/01/Untitled-design-32.png"
 
-function isAuthed() {
-  try {
-    return sessionStorage.getItem(AUTH_KEY) === "1"
-  } catch {
-    return false
-  }
-}
-
-function setAuth(v: boolean) {
-  try {
-    if (v) sessionStorage.setItem(AUTH_KEY, "1")
-    else sessionStorage.removeItem(AUTH_KEY)
-  } catch {
-    /* ignore */
-  }
-}
-
 export function AdminPage() {
   const [authed, setAuthedState] = useState(isAuthed())
-  const [tab, setTab] = useState<"jobs" | "applications">("jobs")
+  const [tab, setTab] = useState<"jobs" | "applications" | "settings">("jobs")
 
   if (!authed) return <LoginGate onSuccess={() => setAuthedState(true)} />
 
@@ -63,7 +45,7 @@ export function AdminPage() {
               size="sm"
               className="text-white/80 hover:bg-white/10 hover:text-white"
               onClick={() => {
-                setAuth(false)
+                logout()
                 setAuthedState(false)
               }}
             >
@@ -78,11 +60,20 @@ export function AdminPage() {
           <TabButton active={tab === "applications"} onClick={() => setTab("applications")}>
             <Users className="h-4 w-4" /> Applications
           </TabButton>
+          <TabButton active={tab === "settings"} onClick={() => setTab("settings")}>
+            <Settings className="h-4 w-4" /> Settings
+          </TabButton>
         </div>
       </header>
 
       <main className="container flex-1 py-8">
-        {tab === "jobs" ? <JobsManager /> : <ApplicationsManager />}
+        {tab === "jobs" ? (
+          <JobsManager />
+        ) : tab === "applications" ? (
+          <ApplicationsManager />
+        ) : (
+          <SettingsManager />
+        )}
       </main>
     </div>
   )
@@ -111,13 +102,14 @@ function TabButton({
 }
 
 function LoginGate({ onSuccess }: { onSuccess: () => void }) {
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState(false)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (password === ADMIN_PASSWORD) {
-      setAuth(true)
+    if (login(username, password)) {
       onSuccess()
     } else {
       setError(true)
@@ -138,29 +130,57 @@ function LoginGate({ onSuccess }: { onSuccess: () => void }) {
           </p>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="crm-pass" className="text-white">
-            Password
+          <Label htmlFor="crm-user" className="text-white">
+            Username
           </Label>
           <Input
-            id="crm-pass"
-            type="password"
-            value={password}
+            id="crm-user"
+            type="text"
+            autoComplete="username"
+            value={username}
             onChange={(e) => {
-              setPassword(e.target.value)
+              setUsername(e.target.value)
               setError(false)
             }}
             className="border-white/15 bg-white/[0.04] text-white placeholder:text-white/40 focus-visible:ring-gmg-gold"
-            placeholder="Enter password"
+            placeholder="Enter username"
             autoFocus
           />
         </div>
-        {error && <p className="mt-2 text-sm text-gmg-red">Incorrect password. Try again.</p>}
+        <div className="mt-4 space-y-1.5">
+          <Label htmlFor="crm-pass" className="text-white">
+            Password
+          </Label>
+          <div className="relative flex items-center">
+            <Input
+              id="crm-pass"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                setError(false)
+              }}
+              className="border-white/15 bg-white/[0.04] text-white placeholder:text-white/40 focus-visible:ring-gmg-gold pr-10"
+              placeholder="Enter password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute right-3 flex items-center justify-center rounded p-1 text-white/40 hover:bg-white/10 hover:text-white"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+        {error && (
+          <p className="mt-3 text-sm text-gmg-red">Incorrect username or password. Try again.</p>
+        )}
         <Button type="submit" className="mt-5 w-full">
           Sign in
         </Button>
-        <p className="mt-4 text-center text-xs text-white/40">
-          Demo password: <span className="font-semibold text-white/70">admin123</span>
-        </p>
         <Link
           to="/"
           className="mt-3 block text-center text-xs text-white/50 transition-colors hover:text-white"

@@ -1,0 +1,9 @@
+name = "gmg-resumes-worker"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Binds this Worker directly to the R2 bucket using Cloudflare's internal
+# binding mechanism — no API key/secret ever leaves Cloudflare's network.
+[[r2_buckets]]
+binding = "RESUMES"
+bucket_name = "gmg-resumes"

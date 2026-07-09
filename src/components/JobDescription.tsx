@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils"
+
 const HEADERS = [
   "About IIDE:",
   "About the Role:",
@@ -56,8 +58,30 @@ function isHeader(line: string): boolean {
   return significant.length >= Math.ceil(words.length * 0.6)
 }
 
+/** True for descriptions written with the JD rich text editor (stored as HTML). */
+function isHtml(text: string): boolean {
+  return /<\/?(p|ul|ol|li|strong|em|u|s|blockquote|a|br|h[1-6])[\s>]/i.test(text)
+}
+
 export function JobDescription({ text }: { text: string }) {
   if (!text) return <p className="text-muted-foreground">No description available.</p>
+
+  if (isHtml(text)) {
+    return (
+      <div
+        className={cn(
+          "space-y-3 text-[15px] leading-relaxed text-foreground/90",
+          "[&_p]:my-3 [&_p:first-child]:mt-0",
+          "[&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-5",
+          "[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-5",
+          "[&_blockquote]:my-3 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-muted-foreground",
+          "[&_a]:text-primary [&_a]:underline",
+          "[&_strong]:font-semibold",
+        )}
+        dangerouslySetInnerHTML={{ __html: text }}
+      />
+    )
+  }
 
   let normalized = text.replace(/\t/g, " ").replace(/●\s*/g, "\n● ").replace(/○\s*/g, "\n○ ")
 

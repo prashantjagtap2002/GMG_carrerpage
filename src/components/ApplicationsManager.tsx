@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react"
-import { Link } from "react-router-dom"
-import { Download, Eye, FileText, Mail, Search, Trash2, X } from "lucide-react"
+import { Download, Eye, Search, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,42 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { ApplicationDetail } from "@/components/ApplicationDetail"
 import { clearApplications, deleteApplication, useApplications } from "@/lib/crm-store"
-import { deleteResume, getResume } from "@/lib/resume-store"
+import { deleteResume } from "@/lib/resume-store"
+import { applicantName, type Application } from "@/lib/storage"
+import { APPLICATION_STAGES, STAGE_DOT_CLASS } from "@/lib/pipeline"
 import { formatDate } from "@/data/jobs"
-import type { Application } from "@/lib/storage"
-
-/** Fetch a stored résumé from IndexedDB and open it in a new tab (or download). */
-async function openResume(app: Application) {
-  try {
-    const stored = await getResume(app.id)
-    if (!stored) {
-      window.alert(
-        "No résumé file is stored for this application.\n\n" +
-          "It may have been submitted before file storage was added, or from a different browser/device, " +
-          "so only the file name was recorded in that case.",
-      )
-      return
-    }
-    const url = URL.createObjectURL(stored.blob)
-    window.open(url, "_blank", "noopener,noreferrer")
-    // Give the new tab time to load before releasing the URL.
-    setTimeout(() => URL.revokeObjectURL(url), 60_000)
-  } catch {
-    window.alert("Couldn't open the résumé file.")
-  }
-}
-
-function fullName(a: Application) {
-  return [a.firstName, a.lastName].filter(Boolean).join(" ") || "-"
-}
+import { cn } from "@/lib/utils"
 
 function csvCell(v: string) {
   const s = String(v ?? "")
@@ -59,6 +29,7 @@ function exportCSV(apps: Application[]) {
     "Name",
     "Email",
     "Applied For",
+    "Stage",
     "Company",
     "Current Title",
     "Country",
@@ -69,9 +40,10 @@ function exportCSV(apps: Application[]) {
   ]
   const rows = apps.map((a) => [
     a.submittedAt,
-    fullName(a),
+    applicantName(a),
     a.email,
     a.jobTitle,
+    a.stage,
     a.company,
     a.currentTitle,
     a.country,
@@ -89,11 +61,14 @@ function exportCSV(apps: Application[]) {
   a.click()
   URL.revokeObjectURL(url)
 }
+
 export function ApplicationsManager() {
   const apps = useApplications()
   const [query, setQuery] = useState("")
   const [jobFilter, setJobFilter] = useState("all")
-  const [selected, setSelected] = useState<Application | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  const selectedApp = useMemo(() => apps.find((a) => a.id === selectedId) ?? null, [apps, selectedId])
 
   const jobOptions = useMemo(
     () => Array.from(new Set(apps.map((a) => a.jobTitle).filter(Boolean))).sort(),
@@ -106,7 +81,7 @@ export function ApplicationsManager() {
       const matchesJob = jobFilter === "all" || a.jobTitle === jobFilter
       const matchesQuery =
         !q ||
-        fullName(a).toLowerCase().includes(q) ||
+        applicantName(a).toLowerCase().includes(q) ||
         a.email.toLowerCase().includes(q) ||
         a.jobTitle.toLowerCase().includes(q)
       return matchesJob && matchesQuery
@@ -114,10 +89,10 @@ export function ApplicationsManager() {
   }, [apps, query, jobFilter])
 
   function handleDelete(a: Application) {
-    if (window.confirm(`Delete application from ${fullName(a)}?`)) {
+    if (window.confirm(`Delete application from ${applicantName(a)}?`)) {
       deleteApplication(a.id)
       void deleteResume(a.id)
-      if (selected?.id === a.id) setSelected(null)
+      if (selectedId === a.id) setSelectedId(null)
     }
   }
   function handleClear() {
@@ -125,8 +100,18 @@ export function ApplicationsManager() {
     if (window.confirm(`Delete all ${apps.length} applications? This cannot be undone.`)) {
       apps.forEach((a) => void deleteResume(a.id))
       clearApplications()
-      setSelected(null)
+      setSelectedId(null)
     }
+  }
+
+  if (selectedApp) {
+    return (
+      <ApplicationDetail
+        app={selectedApp}
+        onClose={() => setSelectedId(null)}
+        onDelete={handleDelete}
+      />
+    )
   }
 
   return (
@@ -196,33 +181,53 @@ export function ApplicationsManager() {
               <tr>
                 <th className="px-4 py-3 font-medium">Applicant</th>
                 <th className="px-4 py-3 font-medium">Applied For</th>
+                <th className="px-4 py-3 font-medium">Stage</th>
                 <th className="px-4 py-3 font-medium">Country</th>
-                <th className="px-4 py-3 font-medium">Source</th>
                 <th className="px-4 py-3 font-medium">Submitted</th>
                 <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {filtered.map((a) => (
-                <tr key={a.id} className="hover:bg-muted/30">
+                <tr
+                  key={a.id}
+                  className="cursor-pointer hover:bg-muted/30"
+                  onClick={() => setSelectedId(a.id)}
+                >
                   <td className="px-4 py-3">
-                    <div className="font-medium">{fullName(a)}</div>
+                    <div className="font-medium">{applicantName(a)}</div>
                     <div className="text-xs text-muted-foreground">{a.email}</div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{a.jobTitle || "-"}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant="secondary" className="gap-1.5">
+                      <span className={cn("h-1.5 w-1.5 rounded-full", STAGE_DOT_CLASS[a.stage])} />
+                      {APPLICATION_STAGES.find((s) => s.value === a.stage)?.label}
+                    </Badge>
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{a.country || "-"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{a.source || "-"}</td>
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(a.submittedAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="icon" title="View details" onClick={() => setSelected(a)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="View details"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedId(a.id)
+                        }}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
                         title="Delete"
-                        onClick={() => handleDelete(a)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(a)
+                        }}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -235,82 +240,6 @@ export function ApplicationsManager() {
           </table>
         </div>
       )}
-
-      <ApplicationDetail app={selected} onClose={() => setSelected(null)} />
     </div>
   )
 }
-function ApplicationDetail({ app, onClose }: { app: Application | null; onClose: () => void }) {
-  return (
-    <Dialog open={!!app} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-[560px]">
-        {app && (
-          <>
-            <DialogHeader>
-              <DialogTitle>{fullName(app)}</DialogTitle>
-              <DialogDescription>
-                Applied for <span className="font-medium text-foreground">{app.jobTitle || "-"}</span>{" "}
-                · {formatDate(app.submittedAt)}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="mt-2 space-y-3 text-sm">
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">{app.source || "No source"}</Badge>
-                {app.country && <Badge variant="outline">{app.country}</Badge>}
-                {app.resumeName && <Badge variant="outline">Resume: {app.resumeName}</Badge>}
-              </div>
-              <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-                <DetailField label="Email" value={app.email} />
-                <DetailField label="Company" value={app.company} />
-                <DetailField label="Current Title" value={app.currentTitle} />
-                <DetailField label="Website" value={app.website} />
-                <DetailField label="Country" value={app.country} />
-                <DetailField label="Source" value={app.source} />
-              </dl>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Message
-                </p>
-                <p className="mt-1 whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-foreground/90">
-                  {app.message || "-"}
-                </p>
-              </div>
-              <div className="flex flex-wrap justify-between gap-2 pt-2">
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild variant="outline" size="sm">
-                    <Link to={`/jobs/${app.jobId}`}>View job</Link>
-                  </Button>
-                  {app.resumeName && (
-                    <Button variant="outline" size="sm" onClick={() => openResume(app)}>
-                      <FileText className="h-4 w-4" /> View résumé
-                    </Button>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button asChild variant="outline" size="sm">
-                    <a href={`mailto:${app.email}`}>
-                      <Mail className="h-4 w-4" /> Email
-                    </a>
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={onClose}>
-                    <X className="h-4 w-4" /> Close
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function DetailField({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-foreground/90">{value || "-"}</dd>
-    </div>
-  )
-}
-

@@ -10,7 +10,7 @@ opens a local apply form whose submissions are saved to the built-in mini CRM (s
 ## Routes
 - `/` — hero + job list with search, department/location/type filters and sort
 - `/jobs/:id` — local job detail page (full description + sticky apply sidebar + local apply dialog)
-- `/admin` — mini CRM: add/edit/delete Job Descriptions and view applications (password: `admin123`)
+- `/admin` — mini CRM: add/edit/delete Job Descriptions, view applications, and manage admin credentials (username + password, set in `.env`)
 
 ## Run
 ```bash
@@ -30,7 +30,7 @@ careers portal:
 - **Applications tab** — every submission from the public "I'm interested" form is listed here,
   with search, filter-by-job, a detail dialog, delete and CSV export.
 
-Sign in with the demo password **`admin123`**. A discreet "Admin / CRM" link lives in the footer.
+Sign in with the username and password defined in your `.env` file (`VITE_ADMIN_USERNAME` / `VITE_ADMIN_PASSWORD`, defaults to `admin` / `admin123`). Once signed in, the **Settings** tab lets the admin change both the username and password; those changes are saved in the browser (localStorage) and override the `.env` defaults. A discreet "Admin / CRM" link lives in the footer.
 
 > Note: resume files are stored by name only (localStorage can't hold large files).
 
@@ -41,12 +41,13 @@ src/
   data/jobs_data.json     Real 45 jobs (extracted from the live page)
   components/ui/*         shadcn/ui primitives (button, card, input, badge, label, select, dialog)
   components/*            Header, Hero, Footer, JobCard, JobDescription, ApplyDialog
-                          + CRM: JdFormDialog, JobsManager, ApplicationsManager
+                          + CRM: JdFormDialog, JobsManager, ApplicationsManager, SettingsManager
   pages/HomePage.tsx      list view
   pages/JobDetailPage.tsx detail view (no redirect)
   pages/AdminPage.tsx     mini CRM shell (login gate + tabs)
   lib/storage.ts          CRM types + localStorage persistence
   lib/crm-store.ts        reactive store (useSyncExternalStore) + hooks + actions
+  lib/auth-store.ts       admin credentials (.env defaults + localStorage override) + session
   App.tsx, main.tsx       router + entry
 ```
 

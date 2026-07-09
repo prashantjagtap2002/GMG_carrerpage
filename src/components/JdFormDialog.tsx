@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { RichTextEditor } from "@/components/RichTextEditor"
 import { useAllJobs } from "@/lib/crm-store"
 import type { Job } from "@/data/jobs"
 
@@ -49,6 +50,10 @@ function emptyValues(): JdFormValues {
     dateOpened: todayISO(),
     description: "",
   }
+}
+
+function htmlIsEmpty(html: string): boolean {
+  return !html.replace(/<[^>]*>/g, "").trim()
 }
 
 function fromJob(job: Job): JdFormValues {
@@ -90,7 +95,7 @@ export function JdFormDialog({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!values.title.trim() || !values.description.trim()) return
+    if (!values.title.trim() || htmlIsEmpty(values.description)) return
     onSubmit({
       ...values,
       title: values.title.trim(),
@@ -205,14 +210,10 @@ export function JdFormDialog({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="jd-desc">Job Description *</Label>
-            <textarea
-              id="jd-desc"
+            <RichTextEditor
               value={values.description}
-              onChange={(e) => set("description", e.target.value)}
-              required
-              rows={8}
-              placeholder="Paste the full job description here..."
-              className="flex w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              onChange={(html) => set("description", html)}
+              placeholder="Write the full job description here..."
             />
           </div>
 

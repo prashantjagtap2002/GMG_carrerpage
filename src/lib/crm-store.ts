@@ -2,21 +2,27 @@ import { useMemo, useSyncExternalStore } from "react"
 import { seededJobs, type Job } from "@/data/jobs"
 import {
   APPS_KEY,
+  DEFAULT_STAGE,
   HIDDEN_KEY,
   JOBS_KEY,
+  NOTES_KEY,
   OVERRIDES_KEY,
   loadApplications,
   loadCustomJobs,
   loadHiddenIds,
+  loadNotes,
   loadOverrides,
   saveApplications,
   saveCustomJobs,
   saveHiddenIds,
+  saveNotes,
   saveOverrides,
   uid,
   type Application,
+  type ApplicationStage,
   type CustomJob,
   type JobOverride,
+  type Note,
 } from "@/lib/storage"
 
 type CrmState = {
@@ -26,6 +32,7 @@ type CrmState = {
   /** Seeded job ids the admin has deleted. */
   hiddenIds: string[]
   applications: Application[]
+  notes: Note[]
 }
 
 let state: CrmState = {
@@ -33,6 +40,7 @@ let state: CrmState = {
   overrides: loadOverrides(),
   hiddenIds: loadHiddenIds(),
   applications: loadApplications(),
+  notes: loadNotes(),
 }
 
 const listeners = new Set<() => void>()
@@ -60,12 +68,19 @@ function getState() {
 // Keep multiple tabs in sync (e.g. the portal open in one tab, the CRM in another).
 if (typeof window !== "undefined") {
   window.addEventListener("storage", (e) => {
-    if (e.key === JOBS_KEY || e.key === APPS_KEY || e.key === OVERRIDES_KEY || e.key === HIDDEN_KEY) {
+    if (
+      e.key === JOBS_KEY ||
+      e.key === APPS_KEY ||
+      e.key === OVERRIDES_KEY ||
+      e.key === HIDDEN_KEY ||
+      e.key === NOTES_KEY
+    ) {
       state = {
         customJobs: loadCustomJobs(),
         overrides: loadOverrides(),
         hiddenIds: loadHiddenIds(),
         applications: loadApplications(),
+        notes: loadNotes(),
       }
       emit()
     }
@@ -146,8 +161,17 @@ export function resetSeededCustomizations() {
   saveHiddenIds([])
 }
 
-export function addApplication(input: Omit<Application, "id" | "submittedAt">): Application {
-  const app: Application = { ...input, id: uid("app"), submittedAt: new Date().toISOString() }
+export function addApplication(
+  input: Omit<Application, "id" | "submittedAt" | "stage" | "stageHistory">,
+): Application {
+  const submittedAt = new Date().toISOString()
+  const app: Application = {
+    ...input,
+    id: uid("app"),
+    submittedAt,
+    stage: DEFAULT_STAGE,
+    stageHistory: [{ stage: DEFAULT_STAGE, at: submittedAt }],
+  }
   const applications = [app, ...state.applications]
   setState({ ...state, applications })
   saveApplications(applications)
@@ -156,13 +180,41 @@ export function addApplication(input: Omit<Application, "id" | "submittedAt">): 
 
 export function deleteApplication(id: string) {
   const applications = state.applications.filter((a) => a.id !== id)
+  const notes = state.notes.filter((n) => n.applicationId !== id)
+  setState({ ...state, applications, notes })
+  saveApplications(applications)
+  saveNotes(notes)
+}
+
+export function clearApplications() {
+  setState({ ...state, applications: [], notes: [] })
+  saveApplications([])
+  saveNotes([])
+}
+
+/** Move an application to a new pipeline stage, recording the transition in its timeline. */
+export function updateApplicationStage(id: string, stage: ApplicationStage) {
+  const applications = state.applications.map((a) =>
+    a.id === id && a.stage !== stage
+      ? { ...a, stage, stageHistory: [...a.stageHistory, { stage, at: new Date().toISOString() }] }
+      : a,
+  )
   setState({ ...state, applications })
   saveApplications(applications)
 }
 
-export function clearApplications() {
-  setState({ ...state, applications: [] })
-  saveApplications([])
+export function addNote(applicationId: string, text: string): Note {
+  const note: Note = { id: uid("note"), applicationId, text, createdAt: new Date().toISOString() }
+  const notes = [note, ...state.notes]
+  setState({ ...state, notes })
+  saveNotes(notes)
+  return note
+}
+
+export function deleteNote(id: string) {
+  const notes = state.notes.filter((n) => n.id !== id)
+  setState({ ...state, notes })
+  saveNotes(notes)
 }
 
 // ---- Hooks ----
@@ -193,4 +245,22 @@ export function useSeededCustomizationCount() {
 
 export function useApplications() {
   return useCrmState().applications
+}
+
+export function useApplicationById(id: string | undefined) {
+  const apps = useApplications()
+  return useMemo(() => (id ? apps.find((a) => a.id === id) : undefined), [apps, id])
+}
+
+export function useNotes(applicationId: string | undefined) {
+  const notes = useCrmState().notes
+  return useMemo(
+    () =>
+      applicationId
+        ? notes
+            .filter((n) => n.applicationId === applicationId)
+            .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        : [],
+    [notes, applicationId],
+  )
 }
