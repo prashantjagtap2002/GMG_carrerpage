@@ -1,14 +1,7 @@
 import type { Job } from "@/data/jobs"
 
 /** Hiring pipeline stage for an application. */
-export type ApplicationStage =
-  | "new"
-  | "contacted"
-  | "screening"
-  | "interview"
-  | "offer"
-  | "hired"
-  | "rejected"
+export type ApplicationStage = string
 
 export const DEFAULT_STAGE: ApplicationStage = "new"
 

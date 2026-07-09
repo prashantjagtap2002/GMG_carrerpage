@@ -14,7 +14,7 @@ import { ApplicationDetail } from "@/components/ApplicationDetail"
 import { clearApplications, deleteApplication, useApplications } from "@/lib/crm-store"
 import { deleteResume } from "@/lib/resume-store"
 import { applicantName, type Application } from "@/lib/storage"
-import { APPLICATION_STAGES, STAGE_DOT_CLASS } from "@/lib/pipeline"
+import { usePipelineStore } from "@/lib/pipeline"
 import { formatDate } from "@/data/jobs"
 import { cn } from "@/lib/utils"
 
@@ -64,6 +64,7 @@ function exportCSV(apps: Application[]) {
 
 export function ApplicationsManager() {
   const apps = useApplications()
+  const { stages } = usePipelineStore()
   const [query, setQuery] = useState("")
   const [jobFilter, setJobFilter] = useState("all")
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -201,8 +202,8 @@ export function ApplicationsManager() {
                   <td className="px-4 py-3 text-muted-foreground">{a.jobTitle || "-"}</td>
                   <td className="px-4 py-3">
                     <Badge variant="secondary" className="gap-1.5">
-                      <span className={cn("h-1.5 w-1.5 rounded-full", STAGE_DOT_CLASS[a.stage])} />
-                      {APPLICATION_STAGES.find((s) => s.value === a.stage)?.label}
+                      <span className={cn("h-1.5 w-1.5 rounded-full", stages.find((s) => s.id === a.stage)?.color || "bg-gray-400")} />
+                      {stages.find((s) => s.id === a.stage)?.label || a.stage}
                     </Badge>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{a.country || "-"}</td>

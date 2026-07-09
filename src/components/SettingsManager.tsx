@@ -5,6 +5,9 @@ import {
   Eye,
   EyeOff,
   UserCog,
+  Trash2,
+  Plus,
+  GripVertical
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,6 +17,7 @@ import {
   updateCredentials,
   useCredentials,
 } from "@/lib/auth-store"
+import { usePipelineStore } from "@/lib/pipeline"
 
 
 
@@ -53,6 +57,7 @@ export function SettingsManager() {
       </div>
 
       <div className="space-y-6">
+        <PipelineSettingsSection />
         <CredentialsSection />
       </div>
     </div>
@@ -222,6 +227,111 @@ function CredentialsSection() {
   )
 }
 
+
+
+/* Pipeline Settings - manage customizable stages */
+
+function PipelineSettingsSection() {
+  const { stages, addStage, deleteStage } = usePipelineStore()
+  const [newStageName, setNewStageName] = useState("")
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [deletePin, setDeletePin] = useState("")
+  const [enteredPin, setEnteredPin] = useState("")
+
+  function handleAdd(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newStageName.trim()) return
+    addStage({ label: newStageName.trim(), color: "bg-blue-500" })
+    setNewStageName("")
+  }
+
+  function initiateDelete(id: string) {
+    setDeleteConfirmId(id)
+    setDeletePin(Math.floor(1000 + Math.random() * 9000).toString())
+    setEnteredPin("")
+  }
+
+  function confirmDelete(e: React.FormEvent) {
+    e.preventDefault()
+    if (enteredPin === deletePin && deleteConfirmId) {
+      deleteStage(deleteConfirmId)
+      setDeleteConfirmId(null)
+    }
+  }
+
+  return (
+    <section className="overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
+      <div className="border-b bg-muted/50 p-4">
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold">Pipeline Stages</h3>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Customize the stages of your hiring pipeline.
+        </p>
+      </div>
+      <div className="p-4 sm:p-6 space-y-4">
+        <ul className="space-y-2">
+          {stages.map((stage) => (
+            <li key={stage.id} className="flex items-center justify-between rounded-md border p-3">
+              <div className="flex items-center gap-3">
+                <GripVertical className="h-4 w-4 text-muted-foreground opacity-50 cursor-grab" />
+                <span className={`h-2 w-2 rounded-full ${stage.color}`} />
+                <span className="font-medium">{stage.label}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => initiateDelete(stage.id)}
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+
+        {deleteConfirmId && (
+          <div className="rounded-md border border-destructive/20 bg-destructive/5 p-4">
+            <p className="text-sm font-medium text-destructive mb-2">
+              Are you sure you want to delete this stage forever?
+            </p>
+            <p className="text-sm mb-4">
+              To confirm, type this PIN: <strong className="select-none">{deletePin}</strong>
+            </p>
+            <form onSubmit={confirmDelete} className="flex gap-2">
+              <Input
+                value={enteredPin}
+                onChange={(e) => setEnteredPin(e.target.value)}
+                placeholder="Enter PIN"
+                className="w-32"
+                autoFocus
+              />
+              <Button type="submit" variant="destructive" disabled={enteredPin !== deletePin}>
+                Delete
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setDeleteConfirmId(null)}>
+                Cancel
+              </Button>
+            </form>
+          </div>
+        )}
+
+        <form onSubmit={handleAdd} className="flex gap-2 pt-2">
+          <Input
+            value={newStageName}
+            onChange={(e) => setNewStageName(e.target.value)}
+            placeholder="New stage name..."
+            className="flex-1"
+          />
+          <Button type="submit" variant="secondary">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Stage
+          </Button>
+        </form>
+      </div>
+    </section>
+  )
+}
 
 
 /* Small presentational helpers. */

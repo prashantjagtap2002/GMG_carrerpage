@@ -7,7 +7,7 @@ import { formatDate } from "@/data/jobs"
 import { addNote, deleteNote, updateApplicationStage, useNotes } from "@/lib/crm-store"
 import { getResume } from "@/lib/resume-store"
 import { applicantName, type Application, type ApplicationStage } from "@/lib/storage"
-import { APPLICATION_STAGES, STAGE_DOT_CLASS } from "@/lib/pipeline"
+import { usePipelineStore } from "@/lib/pipeline"
 import { cn } from "@/lib/utils"
 
 /** Fetch a stored resume from R2 (via the Worker) and open it in a new tab. */
@@ -72,6 +72,7 @@ export function ApplicationDetail({
   onClose: () => void
   onDelete: (app: Application) => void
 }) {
+  const { stages } = usePipelineStore()
   const [tab, setTab] = useState<"all" | "notes">("all")
   const [draft, setDraft] = useState("")
   const notes = useNotes(app.id)
@@ -116,8 +117,8 @@ export function ApplicationDetail({
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-lg font-semibold">{name}</h2>
               <Badge variant="secondary" className="gap-1.5">
-                <span className={cn("h-1.5 w-1.5 rounded-full", STAGE_DOT_CLASS[app.stage])} />
-                {APPLICATION_STAGES.find((s) => s.value === app.stage)?.label}
+                <span className={cn("h-1.5 w-1.5 rounded-full", stages.find((s) => s.id === app.stage)?.color || "bg-gray-400")} />
+                {stages.find((s) => s.id === app.stage)?.label || app.stage}
               </Badge>
             </div>
             <p className="mt-0.5 text-sm text-muted-foreground">
@@ -152,23 +153,26 @@ export function ApplicationDetail({
       </div>
 
       {/* Pipeline */}
-      <div className="flex flex-wrap gap-1 overflow-x-auto rounded-lg border bg-muted/30 p-1.5">
-        {APPLICATION_STAGES.map((s) => (
-          <button
-            key={s.value}
-            type="button"
-            onClick={() => updateApplicationStage(app.id, s.value)}
-            className={cn(
-              "inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              app.stage === s.value
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <span className={cn("h-1.5 w-1.5 rounded-full", STAGE_DOT_CLASS[s.value])} />
-            {s.label}
-          </button>
-        ))}
+      <div className="flex w-full overflow-hidden rounded-full border border-gray-200">
+        {stages.map((s) => {
+          const isActive = app.stage === s.id
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => updateApplicationStage(app.id, s.id)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium transition-colors border-r last:border-r-0 border-gray-200",
+                isActive
+                  ? "bg-blue-50/50 text-blue-600"
+                  : "bg-transparent text-gray-500 hover:bg-gray-50/50 hover:text-gray-900"
+              )}
+            >
+              <span className={cn("h-1.5 w-1.5 rounded-full", isActive ? "bg-blue-600" : "bg-gray-400")} />
+              {s.label}
+            </button>
+          )
+        })}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
@@ -240,13 +244,13 @@ export function ApplicationDetail({
                           <span
                             className={cn(
                               "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",
-                              STAGE_DOT_CLASS[entry.stage],
+                              stages.find((s) => s.id === entry.stage)?.color || "bg-gray-400",
                             )}
                           />
                           <span>
                             Stage set to{" "}
                             <span className="font-medium text-foreground">
-                              {APPLICATION_STAGES.find((s) => s.value === entry.stage)?.label}
+                              {stages.find((s) => s.id === entry.stage)?.label || entry.stage}
                             </span>{" "}
                             · {timeLabel(entry.at)}
                           </span>
