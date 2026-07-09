@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { Briefcase, ExternalLink, LogOut, Settings, Users, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,9 +12,17 @@ import { isAuthed, login, logout } from "@/lib/auth-store"
 const GMG_LOGO =
   "https://bunny-wp-pullzone-cghvklkcns.b-cdn.net/wp-content/uploads/2026/01/Untitled-design-32.png"
 
+type AdminTab = "jobs" | "applications" | "settings"
+
+function isAdminTab(value: string | null): value is AdminTab {
+  return value === "jobs" || value === "applications" || value === "settings"
+}
+
 export function AdminPage() {
   const [authed, setAuthedState] = useState(isAuthed())
-  const [tab, setTab] = useState<"jobs" | "applications" | "settings">("jobs")
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = isAdminTab(searchParams.get("tab")) ? searchParams.get("tab") as AdminTab : "jobs"
+  const setTab = (next: AdminTab) => setSearchParams({ tab: next }, { replace: true })
 
   if (!authed) return <LoginGate onSuccess={() => setAuthedState(true)} />
 
