@@ -57,3 +57,17 @@ CREATE TABLE IF NOT EXISTS job_overrides (
 CREATE TABLE IF NOT EXISTS hidden_jobs (
   job_id VARCHAR(255) PRIMARY KEY
 );
+
+-- Read-only mirror of who has admin/CRM access, synced from Clerk (the
+-- actual auth system) by the admin-users Netlify Function every time the
+-- Settings > Admin Users tab loads or an admin is invited/removed. Holds no
+-- passwords — just account metadata, so it's visible in the Supabase table
+-- editor. Only ever written with the service_role key from that one
+-- server-side function; the app never exposes it through a public endpoint.
+CREATE TABLE IF NOT EXISTS admin_users (
+  id VARCHAR(255) PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  name VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE,
+  synced_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);

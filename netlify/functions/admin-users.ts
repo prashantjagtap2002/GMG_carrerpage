@@ -1,6 +1,6 @@
 import { Handler } from "@netlify/functions"
 import { createClerkClient } from "@clerk/backend"
-import { jsonResponse } from "./_supabase"
+import { getSupabase, jsonResponse } from "./_supabase"
 import { isAuthed } from "./_auth"
 
 /**
@@ -13,6 +13,32 @@ function getClerkClient() {
   const secretKey = process.env.CLERK_SECRET_KEY
   if (!secretKey) throw new Error("CLERK_SECRET_KEY is not configured")
   return createClerkClient({ secretKey })
+}
+
+type MirrorUser = { id: string; email: string; name: string; createdAt: number }
+
+/** Keeps the read-only `admin_users` Supabase table in step with Clerk's live user list. */
+async function syncAdminUsersMirror(users: MirrorUser[]) {
+  const supabase = getSupabase()
+  if (users.length > 0) {
+    const { error } = await supabase.from("admin_users").upsert(
+      users.map((u) => ({
+        id: u.id,
+        email: u.email,
+        name: u.name || null,
+        created_at: new Date(u.createdAt).toISOString(),
+        synced_at: new Date().toISOString(),
+      })),
+      { onConflict: "id" },
+    )
+    if (error) console.error("Failed to sync admin_users mirror:", error)
+  }
+
+  const { error: staleError } = await supabase
+    .from("admin_users")
+    .delete()
+    .not("id", "in", `(${users.map((u) => `"${u.id}"`).join(",") || "''"})`)
+  if (staleError) console.error("Failed to prune admin_users mirror:", staleError)
 }
 
 const handler: Handler = async (event) => {
@@ -29,13 +55,17 @@ const handler: Handler = async (event) => {
         clerkClient.invitations.getInvitationList({ status: "pending", limit: 100 }),
       ])
 
+      const mappedUsers = users.map((u) => ({
+        id: u.id,
+        email: u.emailAddresses.find((e) => e.id === u.primaryEmailAddressId)?.emailAddress ?? u.emailAddresses[0]?.emailAddress ?? "",
+        name: [u.firstName, u.lastName].filter(Boolean).join(" "),
+        createdAt: u.createdAt,
+      }))
+
+      await syncAdminUsersMirror(mappedUsers)
+
       return jsonResponse(200, {
-        users: users.map((u) => ({
-          id: u.id,
-          email: u.emailAddresses.find((e) => e.id === u.primaryEmailAddressId)?.emailAddress ?? u.emailAddresses[0]?.emailAddress ?? "",
-          name: [u.firstName, u.lastName].filter(Boolean).join(" "),
-          createdAt: u.createdAt,
-        })),
+        users: mappedUsers,
         invitations: invitations.map((i) => ({
           id: i.id,
           emailAddress: i.emailAddress,
@@ -66,6 +96,7 @@ const handler: Handler = async (event) => {
 
       if (type === "user") {
         await clerkClient.users.deleteUser(id)
+        await getSupabase().from("admin_users").delete().eq("id", id)
       } else {
         await clerkClient.invitations.revokeInvitation(id)
       }
