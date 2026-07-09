@@ -2,12 +2,13 @@
  * Cloudflare Worker that proxies resume uploads/downloads to the "gmg-resumes"
  * R2 bucket. Files are stored under Resume/<applicationId>.
  *
- * Access control: every request must carry `Authorization: Bearer <token>`
- * matching the RESUME_ACCESS_TOKEN secret. This keeps the bucket out of
- * search engines / random scraping, but the token does ship inside the
- * admin site's JS bundle (VITE_RESUME_ACCESS_TOKEN) since this is a static
- * frontend with no server-side session — treat it as "unlisted", not a true
- * secret. Set RESUME_ACCESS_TOKEN with:
+ * Access control: GET (viewing a resume) is public — the `resume_link` saved
+ * in Supabase and the CRM's "View resume" button both rely on that, and
+ * application ids are unguessable, so this is "unlisted", not indexed or
+ * enumerable, not truly private. PUT/DELETE (uploading/removing a resume)
+ * still require `Authorization: Bearer <token>` matching the
+ * RESUME_ACCESS_TOKEN secret, so random visitors can't overwrite or delete
+ * files. Set RESUME_ACCESS_TOKEN with:
  *   wrangler secret put RESUME_ACCESS_TOKEN
  */
 
@@ -39,6 +40,16 @@ export default {
     }
     const key = `Resume/${match[1]}`
 
+    if (request.method === "GET") {
+      const obj = await env.RESUMES.get(key)
+      if (!obj) return new Response("Not found", { status: 404, headers })
+      const resHeaders = new Headers(headers)
+      obj.writeHttpMetadata(resHeaders)
+      resHeaders.set("X-Resume-Name", obj.customMetadata?.name || "")
+      return new Response(obj.body, { headers: resHeaders })
+    }
+
+    // Uploading/deleting still requires the token — only viewing is public.
     if (!env.RESUME_ACCESS_TOKEN || request.headers.get("Authorization") !== `Bearer ${env.RESUME_ACCESS_TOKEN}`) {
       return new Response("Unauthorized", { status: 401, headers })
     }
@@ -54,15 +65,6 @@ export default {
         status: 200,
         headers: { ...headers, "Content-Type": "application/json" },
       })
-    }
-
-    if (request.method === "GET") {
-      const obj = await env.RESUMES.get(key)
-      if (!obj) return new Response("Not found", { status: 404, headers })
-      const resHeaders = new Headers(headers)
-      obj.writeHttpMetadata(resHeaders)
-      resHeaders.set("X-Resume-Name", obj.customMetadata?.name || "")
-      return new Response(obj.body, { headers: resHeaders })
     }
 
     if (request.method === "DELETE") {

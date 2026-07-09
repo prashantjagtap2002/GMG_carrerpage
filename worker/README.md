@@ -45,9 +45,13 @@ Rebuild/redeploy the frontend after changing `.env`.
 
 ## Security note
 
-The access token is checked by the Worker on every request, but it also ships
-inside the admin site's JS bundle (there's no server-side session to keep it
-truly private in a static frontend). This keeps resumes out of search engines
-and casual link-guessing, but is not equivalent to real authentication —
-don't rely on it for anything more sensitive than resumes. If you outgrow
-this, put a real auth layer (e.g. Cloudflare Access) in front of the Worker.
+Viewing a resume (`GET`) is public — no token required — so the `resume_link`
+saved in Supabase and the CRM's "View resume" button both work as plain
+clickable URLs. Uploading and deleting (`PUT`/`DELETE`) still require
+`Authorization: Bearer <RESUME_ACCESS_TOKEN>`, which ships inside the admin
+site's JS bundle (there's no server-side session to keep it truly private in
+a static frontend). This keeps resumes "unlisted" — not indexed, not
+enumerable, but not truly private either — and stops randoms from
+overwriting or deleting files. Don't rely on it for anything more sensitive
+than resumes. If you outgrow this, put a real auth layer (e.g. Cloudflare
+Access) in front of the Worker.
