@@ -7,8 +7,7 @@ import {
   UserCog,
   Trash2,
   Plus,
-  ArrowUp,
-  ArrowDown
+  GripVertical
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -238,6 +237,25 @@ function PipelineSettingsSection() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [deletePin, setDeletePin] = useState("")
   const [enteredPin, setEnteredPin] = useState("")
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
+  function handleDragStart(index: number) {
+    setDraggedIndex(index)
+  }
+
+  function handleDragEnter(index: number) {
+    if (draggedIndex === null) return
+    setDragOverIndex(index)
+  }
+
+  function handleDragEnd() {
+    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+      reorderStages(draggedIndex, dragOverIndex)
+    }
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault()
@@ -273,30 +291,29 @@ function PipelineSettingsSection() {
       <div className="p-4 sm:p-6 space-y-4">
         <ul className="space-y-2">
           {stages.map((stage, i) => (
-            <li key={stage.id} className="flex items-center justify-between rounded-md border p-3">
+            <li 
+              key={stage.id} 
+              draggable
+              onDragStart={() => handleDragStart(i)}
+              onDragEnter={() => handleDragEnter(i)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => e.preventDefault()}
+              className={`flex items-center justify-between rounded-md border p-3 transition-colors cursor-move bg-card ${
+                draggedIndex === i ? "opacity-50" : ""
+              } ${
+                dragOverIndex === i && draggedIndex !== null && draggedIndex !== i
+                  ? dragOverIndex > draggedIndex
+                    ? "border-b-2 border-b-primary"
+                    : "border-t-2 border-t-primary"
+                  : ""
+              }`}
+            >
               <div className="flex items-center gap-3">
+                <GripVertical className="h-4 w-4 text-muted-foreground opacity-50" />
                 <span className={`h-2 w-2 rounded-full ${stage.color}`} />
                 <span className="font-medium">{stage.label}</span>
               </div>
               <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => i > 0 && reorderStages(i, i - 1)}
-                  disabled={i === 0}
-                  className="h-8 w-8 text-muted-foreground"
-                >
-                  <ArrowUp className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => i < stages.length - 1 && reorderStages(i, i + 1)}
-                  disabled={i === stages.length - 1}
-                  className="h-8 w-8 text-muted-foreground"
-                >
-                  <ArrowDown className="h-4 w-4" />
-                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
