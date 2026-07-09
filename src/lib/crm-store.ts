@@ -40,7 +40,7 @@ const FN_BASE = "/.netlify/functions"
  * which is fine for public endpoints and fails auth (as intended) on
  * protected ones.
  */
-async function getAuthToken(): Promise<string | null> {
+export async function getAuthToken(): Promise<string | null> {
   if (typeof window === "undefined") return null
   try {
     const clerk = (window as unknown as { Clerk?: { session?: { getToken(): Promise<string | null> } } }).Clerk

@@ -1,20 +1,3 @@
-import rawJobs from "./jobs_data.json"
-
-export type RawJob = {
-  Posting_Title: string
-  Job_Opening_Name: string
-  Job_Description: string
-  Industry: string
-  City: string
-  State: string
-  Country: string
-  Job_Type: string
-  Work_Experience: string
-  Date_Opened: string
-  id: string
-  Publish: boolean
-}
-
 export type Job = {
   id: string
   title: string
@@ -28,32 +11,13 @@ export type Job = {
   dateOpened: string
 }
 
-function decodeEntities(s: string): string {
-  if (!s) return s
-  return s
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
-}
-
-/** Static catalogue loaded from jobs_data.json (read-only). */
-export const seededJobs: Job[] = (rawJobs as RawJob[])
-  .filter((j) => j.Publish !== false)
-  .map((j) => ({
-    id: j.id,
-    title: decodeEntities(j.Job_Opening_Name || j.Posting_Title || "Untitled Role"),
-    description: decodeEntities(j.Job_Description || ""),
-    department: j.Industry || "General",
-    city: j.City || "",
-    state: j.State || "",
-    country: j.Country || "",
-    jobType: j.Job_Type || "Full time",
-    experience: j.Work_Experience || "Not specified",
-    dateOpened: j.Date_Opened || "",
-  }))
+/**
+ * Job descriptions now live entirely in Supabase (custom_jobs table, synced
+ * via crm-store's refreshJobs/composeJobs) — the catalogue that used to be
+ * bundled here from jobs_data.json was migrated there directly. This stays
+ * empty so composeJobs' seeded-job merge is a no-op.
+ */
+export const seededJobs: Job[] = []
 
 export function locationString(job: Job): string {
   return [job.city, job.state, job.country].filter(Boolean).join(", ")

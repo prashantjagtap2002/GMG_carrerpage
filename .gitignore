@@ -13,3 +13,6 @@ dist-ssr
 *.log
 *.pid
 *.tsbuildinfo
+
+# Local Netlify folder
+.netlify

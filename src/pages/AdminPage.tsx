@@ -31,7 +31,7 @@ export function AdminPage() {
               Sign in to manage job descriptions and applications.
             </p>
           </div>
-          <SignIn routing="hash" />
+          <SignIn routing="hash" fallbackRedirectUrl="/admin" />
           <Link to="/" className="text-xs text-white/50 transition-colors hover:text-white">
             ← Back to careers site
           </Link>

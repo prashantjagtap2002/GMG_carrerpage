@@ -1,9 +1,17 @@
-import { useState } from "react"
-import { Plus, Trash2, GripVertical, UserCog } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Plus, Trash2, GripVertical, Mail, UserCog, UserPlus, Users } from "lucide-react"
 import { UserProfile } from "@clerk/clerk-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { usePipelineStore } from "@/lib/pipeline"
+import {
+  listAdminUsers,
+  inviteAdminUser,
+  removeAdminUser,
+  revokeAdminInvitation,
+  type AdminUser,
+  type AdminInvitation,
+} from "@/lib/admin-users"
 
 /**
  * CRM "Settings" tab. Sign-in and account management (email, password, etc.)
@@ -27,9 +35,199 @@ export function SettingsManager() {
 
       <div className="space-y-6">
         <PipelineSettingsSection />
+        <AdminUsersSection />
         <AccountSection />
       </div>
     </div>
+  )
+}
+
+/* Admin Users - invite/remove who can sign in to the CRM (Clerk-backed). */
+
+function AdminUsersSection() {
+  const [users, setUsers] = useState<AdminUser[]>([])
+  const [invitations, setInvitations] = useState<AdminInvitation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [email, setEmail] = useState("")
+  const [inviting, setInviting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null)
+  const [removePin, setRemovePin] = useState("")
+  const [enteredPin, setEnteredPin] = useState("")
+
+  async function refresh() {
+    try {
+      const data = await listAdminUsers()
+      setUsers(data.users)
+      setInvitations(data.invitations)
+    } catch {
+      setError("Couldn't load admin users.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    refresh()
+  }, [])
+
+  async function handleInvite(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email.trim()) return
+    setInviting(true)
+    setError(null)
+    try {
+      await inviteAdminUser(email.trim())
+      setEmail("")
+      await refresh()
+    } catch {
+      setError("Couldn't send invite. Check the email address and try again.")
+    } finally {
+      setInviting(false)
+    }
+  }
+
+  function initiateRemove(id: string) {
+    setRemoveConfirmId(id)
+    setRemovePin(Math.floor(1000 + Math.random() * 9000).toString())
+    setEnteredPin("")
+  }
+
+  async function confirmRemove(e: React.FormEvent) {
+    e.preventDefault()
+    if (enteredPin !== removePin || !removeConfirmId) return
+    await removeAdminUser(removeConfirmId)
+    setRemoveConfirmId(null)
+    await refresh()
+  }
+
+  async function handleRevoke(id: string) {
+    await revokeAdminInvitation(id)
+    await refresh()
+  }
+
+  return (
+    <section className="overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
+      <header className="flex items-center gap-3 border-b px-5 py-4">
+        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gmg-gold/10 text-gmg-gold">
+          <Users className="h-5 w-5" />
+        </span>
+        <div>
+          <h3 className="text-base font-semibold">Admin Users</h3>
+          <p className="text-sm text-muted-foreground">
+            Invite teammates to sign in to this CRM, or remove their access.
+          </p>
+        </div>
+      </header>
+
+      <div className="p-4 sm:p-6 space-y-4">
+        <form onSubmit={handleInvite} className="flex gap-2">
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="teammate@company.com"
+            className="flex-1"
+          />
+          <Button type="submit" variant="secondary" disabled={inviting || !email.trim()}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            {inviting ? "Inviting…" : "Invite"}
+          </Button>
+        </form>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Current admins
+              </h4>
+              <ul className="space-y-2">
+                {users.map((u) => (
+                  <li
+                    key={u.id}
+                    className="flex items-center justify-between rounded-md border p-3 bg-card"
+                  >
+                    <div>
+                      <div className="font-medium">{u.name || u.email}</div>
+                      {u.name && <div className="text-xs text-muted-foreground">{u.email}</div>}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => initiateRemove(u.id)}
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </li>
+                ))}
+                {users.length === 0 && (
+                  <li className="text-sm text-muted-foreground">No admins yet.</li>
+                )}
+              </ul>
+            </div>
+
+            {invitations.length > 0 && (
+              <div>
+                <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Pending invitations
+                </h4>
+                <ul className="space-y-2">
+                  {invitations.map((i) => (
+                    <li
+                      key={i.id}
+                      className="flex items-center justify-between rounded-md border p-3 bg-card"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{i.emailAddress}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRevoke(i.id)}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        Revoke
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {removeConfirmId && (
+          <div className="rounded-md border border-destructive/20 bg-destructive/5 p-4">
+            <p className="text-sm font-medium text-destructive mb-2">
+              Are you sure you want to remove this admin's access?
+            </p>
+            <p className="text-sm mb-4">
+              To confirm, type this PIN: <strong className="select-none">{removePin}</strong>
+            </p>
+            <form onSubmit={confirmRemove} className="flex gap-2">
+              <Input
+                value={enteredPin}
+                onChange={(e) => setEnteredPin(e.target.value)}
+                placeholder="Enter PIN"
+                className="w-32"
+                autoFocus
+              />
+              <Button type="submit" variant="destructive" disabled={enteredPin !== removePin}>
+                Remove
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setRemoveConfirmId(null)}>
+                Cancel
+              </Button>
+            </form>
+          </div>
+        )}
+      </div>
+    </section>
   )
 }
 
