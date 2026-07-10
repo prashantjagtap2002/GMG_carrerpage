@@ -23,7 +23,7 @@ import {
  */
 export function SettingsManager() {
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
         <div>
           <h2 className="text-xl font-semibold">Settings</h2>
@@ -33,11 +33,11 @@ export function SettingsManager() {
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="mx-auto max-w-3xl space-y-6">
         <PipelineSettingsSection />
         <AdminUsersSection />
-        <AccountSection />
       </div>
+      <AccountSection />
     </div>
   )
 }
@@ -245,8 +245,16 @@ function AccountSection() {
           <p className="text-sm text-muted-foreground">Update your sign-in details, managed by Clerk.</p>
         </div>
       </header>
-      <div className="p-5">
-        <UserProfile routing="hash" />
+      <div className="overflow-x-auto p-5">
+        <UserProfile
+          routing="hash"
+          appearance={{
+            elements: {
+              rootBox: "w-full mx-auto",
+              cardBox: "w-full max-w-full shadow-none",
+            },
+          }}
+        />
       </div>
     </section>
   )
