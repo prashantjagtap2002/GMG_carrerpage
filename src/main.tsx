@@ -35,6 +35,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       appearance={clerkAppearance}
       afterSignOutUrl="/admin"
       signInFallbackRedirectUrl="/admin"
+      signUpFallbackRedirectUrl="/admin"
     >
       <BrowserRouter>
         <App />

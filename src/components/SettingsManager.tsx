@@ -18,12 +18,12 @@ import {
  * are handled by Clerk — this tab embeds Clerk's own account UI plus the
  * pipeline stage editor, which Clerk has no concept of.
  *
- * Layout mirrors the other CRM managers: a header row, then a two-pane body:
- * a slim section nav on the left and the active section's card(s) on the right.
+ * Layout mirrors the other CRM managers: a header row, then full-width
+ * section cards, so width stays consistent with the Jobs/Applications tabs.
  */
 export function SettingsManager() {
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
         <div>
           <h2 className="text-xl font-semibold">Settings</h2>
@@ -33,10 +33,8 @@ export function SettingsManager() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl space-y-6">
-        <PipelineSettingsSection />
-        <AdminUsersSection />
-      </div>
+      <PipelineSettingsSection />
+      <AdminUsersSection />
       <AccountSection />
     </div>
   )
