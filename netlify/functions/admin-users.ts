@@ -2,6 +2,8 @@ import { Handler } from "@netlify/functions"
 import { createClerkClient } from "@clerk/backend"
 import { getSupabase, jsonResponse } from "./_supabase"
 import { isAuthed } from "./_auth"
+import { getActor } from "./_actor"
+import { logActivity } from "./_log"
 
 /**
  * Lets a signed-in admin manage who else can sign in to the CRM, without
@@ -84,6 +86,13 @@ const handler: Handler = async (event) => {
         emailAddress,
         notify: true,
       })
+      void logActivity({
+        actor: await getActor(event),
+        action: "admin_user.invite",
+        entityType: "admin_user",
+        entityId: invitation.id,
+        summary: `Invited ${emailAddress} as an admin`,
+      })
       return jsonResponse(200, { invitation: { id: invitation.id, emailAddress: invitation.emailAddress } })
     }
 
@@ -94,11 +103,26 @@ const handler: Handler = async (event) => {
         return jsonResponse(400, { error: "Missing or invalid type/id" })
       }
 
+      const actor = await getActor(event)
       if (type === "user") {
         await clerkClient.users.deleteUser(id)
         await getSupabase().from("admin_users").delete().eq("id", id)
+        void logActivity({
+          actor,
+          action: "admin_user.remove",
+          entityType: "admin_user",
+          entityId: id,
+          summary: "Removed an admin's access",
+        })
       } else {
         await clerkClient.invitations.revokeInvitation(id)
+        void logActivity({
+          actor,
+          action: "admin_user.revoke_invite",
+          entityType: "admin_user",
+          entityId: id,
+          summary: "Revoked a pending admin invitation",
+        })
       }
       return jsonResponse(200, { success: true })
     }

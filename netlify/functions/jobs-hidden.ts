@@ -1,6 +1,8 @@
 import { Handler } from "@netlify/functions"
 import { getSupabase, jsonResponse } from "./_supabase"
 import { isAuthed } from "./_auth"
+import { getActor } from "./_actor"
+import { logActivity } from "./_log"
 
 // Admin-only: hide/unhide a seeded job from the public portal.
 const handler: Handler = async (event) => {
@@ -16,6 +18,13 @@ const handler: Handler = async (event) => {
     if (event.httpMethod === "PUT") {
       const { error } = await supabase.from("hidden_jobs").upsert({ job_id: data.jobId })
       if (error) throw error
+      void logActivity({
+        actor: await getActor(event),
+        action: "job.delete",
+        entityType: "job",
+        entityId: data.jobId,
+        summary: `Hid seeded job "${data.jobId}"`,
+      })
       return jsonResponse(200, { success: true })
     }
 

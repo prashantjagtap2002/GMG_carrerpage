@@ -51,7 +51,7 @@ export async function getAuthToken(): Promise<string | null> {
   }
 }
 
-async function syncFetch(path: string, method: string, body?: unknown): Promise<void> {
+export async function syncFetch(path: string, method: string, body?: unknown): Promise<void> {
   try {
     const token = await getAuthToken()
     await fetch(`${FN_BASE}/${path}`, {
@@ -67,7 +67,7 @@ async function syncFetch(path: string, method: string, body?: unknown): Promise<
   }
 }
 
-async function fetchJSON<T>(path: string): Promise<T | undefined> {
+export async function fetchJSON<T>(path: string): Promise<T | undefined> {
   try {
     const token = await getAuthToken()
     const res = await fetch(`${FN_BASE}/${path}`, {

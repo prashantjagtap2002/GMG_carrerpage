@@ -1,6 +1,8 @@
 import { Handler } from "@netlify/functions"
 import { getSupabase, jsonResponse } from "./_supabase"
 import { isAuthed } from "./_auth"
+import { getActor } from "./_actor"
+import { logActivity } from "./_log"
 
 const handler: Handler = async (event) => {
   if (!(await isAuthed(event))) {
@@ -19,6 +21,13 @@ const handler: Handler = async (event) => {
         created_at: data.createdAt,
       })
       if (error) throw error
+      void logActivity({
+        actor: await getActor(event),
+        action: "note.create",
+        entityType: "application",
+        entityId: data.applicationId,
+        summary: `Added a note: "${String(data.text || "").slice(0, 120)}"`,
+      })
       return jsonResponse(200, { success: true })
     }
 
@@ -27,6 +36,12 @@ const handler: Handler = async (event) => {
       if (!data.id) return jsonResponse(400, { error: "Missing id" })
       const { error } = await supabase.from("notes").delete().eq("id", data.id)
       if (error) throw error
+      void logActivity({
+        actor: await getActor(event),
+        action: "note.delete",
+        entityType: "application",
+        summary: "Deleted a note",
+      })
       return jsonResponse(200, { success: true })
     }
 

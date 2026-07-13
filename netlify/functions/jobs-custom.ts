@@ -1,6 +1,8 @@
 import { Handler } from "@netlify/functions"
 import { getSupabase, jsonResponse } from "./_supabase"
 import { isAuthed } from "./_auth"
+import { getActor } from "./_actor"
+import { logActivity } from "./_log"
 
 // Admin-only: create/edit/delete a CRM-added job description.
 const handler: Handler = async (event) => {
@@ -10,6 +12,7 @@ const handler: Handler = async (event) => {
 
   try {
     const supabase = getSupabase()
+    const actor = await getActor(event)
 
     if (event.httpMethod === "POST") {
       const data = JSON.parse(event.body || "{}")
@@ -27,6 +30,13 @@ const handler: Handler = async (event) => {
         created_at: data.createdAt,
       })
       if (error) throw error
+      void logActivity({
+        actor,
+        action: "job.create",
+        entityType: "job",
+        entityId: data.id,
+        summary: `Created job "${data.title}"`,
+      })
       return jsonResponse(200, { success: true })
     }
 
@@ -47,6 +57,13 @@ const handler: Handler = async (event) => {
 
       const { error } = await supabase.from("custom_jobs").update(update).eq("id", data.id)
       if (error) throw error
+      void logActivity({
+        actor,
+        action: "job.update",
+        entityType: "job",
+        entityId: data.id,
+        summary: `Updated job "${patch.title ?? data.id}"`,
+      })
       return jsonResponse(200, { success: true })
     }
 
@@ -55,6 +72,13 @@ const handler: Handler = async (event) => {
       if (!data.id) return jsonResponse(400, { error: "Missing id" })
       const { error } = await supabase.from("custom_jobs").delete().eq("id", data.id)
       if (error) throw error
+      void logActivity({
+        actor,
+        action: "job.delete",
+        entityType: "job",
+        entityId: data.id,
+        summary: `Deleted job "${data.id}"`,
+      })
       return jsonResponse(200, { success: true })
     }
 

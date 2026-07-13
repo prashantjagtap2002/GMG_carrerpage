@@ -1,5 +1,6 @@
 import { Handler } from "@netlify/functions"
 import { getSupabase, jsonResponse } from "./_supabase"
+import { logActivity } from "./_log"
 
 const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -31,6 +32,14 @@ const handler: Handler = async (event) => {
     })
 
     if (error) throw error
+
+    void logActivity({
+      actor: { id: "public", email: data.email ?? null, name: [data.firstName, data.lastName].filter(Boolean).join(" ") || null },
+      action: "application.create",
+      entityType: "application",
+      entityId: data.id,
+      summary: `New application for "${data.jobTitle}"`,
+    })
 
     return jsonResponse(200, { success: true })
   } catch (error) {

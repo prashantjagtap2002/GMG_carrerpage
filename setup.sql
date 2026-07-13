@@ -71,3 +71,27 @@ CREATE TABLE IF NOT EXISTS admin_users (
   created_at TIMESTAMP WITH TIME ZONE,
   synced_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Hiring pipeline stages shown in the CRM (Settings > Pipeline Stages and the
+-- Applications board). Shared across every admin, unlike the old
+-- localStorage-only version. `sort_order` controls display/board order.
+CREATE TABLE IF NOT EXISTS pipeline_stages (
+  id VARCHAR(255) PRIMARY KEY,
+  label VARCHAR(255) NOT NULL,
+  color VARCHAR(255) NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+-- Audit trail of admin actions taken in the CRM (job/application/note/stage/
+-- pipeline/admin-user changes). Written server-side only, from the Netlify
+-- Functions that already gate these mutations behind Clerk auth.
+CREATE TABLE IF NOT EXISTS activity_log (
+  id VARCHAR(255) PRIMARY KEY,
+  actor_email VARCHAR(255),
+  actor_name VARCHAR(255),
+  action VARCHAR(100) NOT NULL,
+  entity_type VARCHAR(50) NOT NULL,
+  entity_id VARCHAR(255),
+  summary TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);

@@ -1,6 +1,8 @@
 import { Handler } from "@netlify/functions"
 import { getSupabase, jsonResponse } from "./_supabase"
 import { isAuthed } from "./_auth"
+import { getActor } from "./_actor"
+import { logActivity } from "./_log"
 
 // Admin-only: upsert/remove an edit layered on top of a seeded job.
 const handler: Handler = async (event) => {
@@ -12,12 +14,20 @@ const handler: Handler = async (event) => {
     const supabase = getSupabase()
     const data = JSON.parse(event.body || "{}")
     if (!data.jobId) return jsonResponse(400, { error: "Missing jobId" })
+    const actor = await getActor(event)
 
     if (event.httpMethod === "PUT") {
       const { error } = await supabase
         .from("job_overrides")
         .upsert({ job_id: data.jobId, patch: data.patch || {} })
       if (error) throw error
+      void logActivity({
+        actor,
+        action: "job.override",
+        entityType: "job",
+        entityId: data.jobId,
+        summary: `Edited seeded job "${data.jobId}"`,
+      })
       return jsonResponse(200, { success: true })
     }
 

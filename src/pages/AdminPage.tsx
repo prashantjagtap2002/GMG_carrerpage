@@ -1,10 +1,12 @@
+import { useEffect } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import { Briefcase, ExternalLink, Settings, Users } from "lucide-react"
-import { SignedIn, SignedOut, SignIn, UserButton } from "@clerk/clerk-react"
+import { SignedIn, SignedOut, SignIn, UserButton, useAuth } from "@clerk/clerk-react"
 import { Button } from "@/components/ui/button"
 import { JobsManager } from "@/components/JobsManager"
 import { ApplicationsManager } from "@/components/ApplicationsManager"
 import { SettingsManager } from "@/components/SettingsManager"
+import { refreshPipelineStages } from "@/lib/pipeline"
 
 const GMG_LOGO =
   "https://bunny-wp-pullzone-cghvklkcns.b-cdn.net/wp-content/uploads/2026/01/Untitled-design-32.png"
@@ -19,6 +21,11 @@ export function AdminPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = isAdminTab(searchParams.get("tab")) ? (searchParams.get("tab") as AdminTab) : "jobs"
   const setTab = (next: AdminTab) => setSearchParams({ tab: next }, { replace: true })
+  const { isSignedIn } = useAuth()
+
+  useEffect(() => {
+    if (isSignedIn) void refreshPipelineStages()
+  }, [isSignedIn])
 
   return (
     <>

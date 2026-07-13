@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react"
-import { Plus, Trash2, GripVertical, Mail, UserCog, UserPlus, Users } from "lucide-react"
+import { Plus, Trash2, GripVertical, History, Mail, UserCog, UserPlus, Users } from "lucide-react"
 import { UserProfile } from "@clerk/clerk-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { usePipelineStore } from "@/lib/pipeline"
+import { listActivityLog, type ActivityLogEntry } from "@/lib/activity-log"
 import {
   listAdminUsers,
   inviteAdminUser,
@@ -35,6 +36,7 @@ export function SettingsManager() {
 
       <PipelineSettingsSection />
       <AdminUsersSection />
+      <ActivityLogSection />
       <AccountSection />
     </div>
   )
@@ -223,6 +225,82 @@ function AdminUsersSection() {
               </Button>
             </form>
           </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+/* Activity Log - audit trail of CRM changes (jobs, applications, notes, stages, admin users). */
+
+function timeAgo(iso: string): string {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000))
+  if (seconds < 60) return "just now"
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
+
+function ActivityLogSection() {
+  const [entries, setEntries] = useState<ActivityLogEntry[]>([])
+  const [loading, setLoading] = useState(true)
+
+  async function refresh() {
+    setLoading(true)
+    try {
+      setEntries(await listActivityLog())
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    refresh()
+  }, [])
+
+  return (
+    <section className="overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
+      <header className="flex items-center justify-between gap-3 border-b px-5 py-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gmg-gold/10 text-gmg-gold">
+            <History className="h-5 w-5" />
+          </span>
+          <div>
+            <h3 className="text-base font-semibold">Activity Log</h3>
+            <p className="text-sm text-muted-foreground">
+              Recent changes made across the CRM, most recent first.
+            </p>
+          </div>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => void refresh()} disabled={loading}>
+          {loading ? "Refreshing…" : "Refresh"}
+        </Button>
+      </header>
+
+      <div className="p-4 sm:p-6">
+        {loading && entries.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : entries.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
+        ) : (
+          <ul className="max-h-96 space-y-2 overflow-y-auto">
+            {entries.map((e) => (
+              <li key={e.id} className="flex items-start justify-between gap-3 rounded-md border p-3 bg-card">
+                <div>
+                  <div className="text-sm font-medium">{e.summary}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {e.actor_name || e.actor_email || "Unknown"}
+                  </div>
+                </div>
+                <span className="shrink-0 text-xs text-muted-foreground" title={new Date(e.created_at).toLocaleString()}>
+                  {timeAgo(e.created_at)}
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </section>
