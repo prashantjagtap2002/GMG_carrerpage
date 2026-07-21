@@ -21,12 +21,12 @@ const nav = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-gmg-black text-white/70">
+    <footer className="border-t bg-white text-foreground/70">
       <div className="container py-14">
         <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr]">
           <div>
             <img src={GMG_LOGO} alt="Gautam Modi Group" className="h-12 w-auto" />
-            <p className="mt-4 max-w-sm text-sm text-white/60">
+            <p className="mt-4 max-w-sm text-sm text-foreground/60">
               We embrace new opportunities that inspire growth, innovation, and progress across a
               portfolio of leading automotive brands.
             </p>
@@ -38,7 +38,7 @@ export function Footer() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={name}
-                  className="flex h-9 w-9 items-center justify-center rounded-md bg-white/10 transition-colors hover:bg-gmg-gold hover:text-gmg-black"
+                  className="flex h-9 w-9 items-center justify-center rounded-md bg-muted transition-colors hover:bg-gmg-gold hover:text-gmg-black"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -49,7 +49,7 @@ export function Footer() {
             <h3 className="text-sm font-semibold uppercase tracking-widest text-gmg-gold">Explore</h3>
             <nav className="mt-4 flex flex-col gap-2 text-sm">
               {nav.map((item) => (
-                <a key={item.label} href={item.href} className="transition-colors hover:text-white">
+                <a key={item.label} href={item.href} className="transition-colors hover:text-foreground">
                   {item.label}
                 </a>
               ))}
@@ -57,24 +57,24 @@ export function Footer() {
           </div>
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-widest text-gmg-gold">Careers</h3>
-            <p className="mt-4 text-sm text-white/60">
+            <p className="mt-4 text-sm text-foreground/60">
               Looking to grow with us? Browse open roles and apply directly on this page.
             </p>
             <a
               href="https://gautammodigroup.com/contact-us/"
-              className="mt-3 inline-block text-sm font-medium text-gmg-gold transition-colors hover:text-white"
+              className="mt-3 inline-block text-sm font-medium text-gmg-gold transition-colors hover:text-foreground"
             >
               Get in touch →
             </a>
             <Link
               to="/admin"
-              className="mt-2 inline-block text-xs text-white/40 transition-colors hover:text-white/70"
+              className="mt-2 inline-block text-xs text-foreground/40 transition-colors hover:text-foreground/70"
             >
               Admin / CRM
             </Link>
           </div>
         </div>
-        <div className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-white/50">
+        <div className="mt-10 border-t pt-6 text-center text-xs text-foreground/50">
           © {new Date().getFullYear()} Gautam Modi Group. All rights reserved.
         </div>
       </div>

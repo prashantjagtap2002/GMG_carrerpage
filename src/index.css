@@ -4,28 +4,26 @@
 
 @layer base {
   :root {
-    /* Gautam Modi Group brand palette — dark theme matching gautammodigroup.com:
-       pure black canvas, charcoal cards with subtle borders, gold accents. */
-    --background: 0 0% 0%;                /* #000000 GMG black */
-    --foreground: 0 0% 98%;
-    --card: 0 0% 7%;                      /* charcoal card, like GMG value/strength cards */
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 42 100% 50%;               /* #FFB400 GMG gold */
-    --primary-foreground: 0 0% 8%;        /* dark text on gold */
-    --secondary: 0 0% 11%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 210 8% 65%;       /* GMG gray lifted for dark-bg contrast */
-    --accent: 0 0% 13%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 79% 45%;             /* #CC1818 GMG red */
+    --background: 0 0% 100%;               /* #ffffff */
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 42 100% 50%;                /* #FFB400 GMG gold */
+    --primary-foreground: 0 0% 8%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 12%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 42%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 12%;
+    --destructive: 0 79% 45%;              /* #CC1818 GMG red */
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 15%;                   /* subtle hairlines, like GMG card borders */
-    --input: 0 0% 15%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
     --ring: 42 100% 50%;
-    --radius: 0.75rem;                    /* rounded cards/buttons (~12px), matching GMG */
+    --radius: 0.75rem;
   }
 }
 
@@ -38,8 +36,7 @@
   }
   html {
     scroll-behavior: smooth;
-    /* Native controls (selects, scrollbars, date pickers) render dark. */
-    color-scheme: dark;
-    background-color: #000;
+    color-scheme: light;
+    background-color: #fff;
   }
 }

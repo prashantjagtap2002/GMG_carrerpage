@@ -12,9 +12,9 @@ import { addApplication, useAllJobs, useJobById } from "@/lib/crm-store"
 import { saveResume } from "@/lib/resume-store"
 
 const inputCls =
-  "h-11 w-full rounded-lg border border-white/10 bg-white/[0.04] pl-10 pr-3.5 text-sm text-white placeholder:text-white/30 [color-scheme:dark] transition-all duration-150 focus:border-gmg-gold/60 focus:bg-gmg-gold/[0.03] focus:outline-none focus:ring-[3px] focus:ring-gmg-gold/15"
-const labelCls = "mb-2 block text-[13px] font-semibold text-white/80"
-const optionCls = "bg-gmg-dark text-white"
+  "h-11 w-full rounded-lg border border-gray-200 bg-white pl-10 pr-3.5 text-sm text-foreground placeholder:text-gray-400 [color-scheme:light] transition-all duration-150 focus:border-gmg-gold/60 focus:bg-gmg-gold/[0.03] focus:outline-none focus:ring-[3px] focus:ring-gmg-gold/15"
+const labelCls = "mb-2 block text-[13px] font-semibold text-foreground/80"
+const optionCls = "bg-white text-foreground"
 
 const countries = ["India", "United Arab Emirates", "United States", "United Kingdom", "Canada", "Australia", "Singapore", "Saudi Arabia", "Qatar", "Germany", "France", "Other"]
 const sources = ["LinkedIn", "Job Board (Naukri, Indeed, etc.)", "Company Website", "Referral", "Social Media", "Newspaper / Print", "Other"]
@@ -41,7 +41,7 @@ function Field({ label, required, htmlFor, icon, className, children }: {
       </label>
       <div className="relative">
         {icon && (
-          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-gmg-gold [&_svg]:h-4 [&_svg]:w-4">
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground/30 transition-colors group-focus-within:text-gmg-gold [&_svg]:h-4 [&_svg]:w-4">
             {icon}
           </span>
         )}
@@ -55,7 +55,7 @@ function SelectField(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <>
       <select {...props} className={`${inputCls} cursor-pointer appearance-none pr-10`}>{props.children}</select>
-      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
     </>
   )
 }
@@ -66,7 +66,7 @@ function Section({ step, title }: { step: number; title: string }) {
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-sm font-semibold text-black">
         {step}
       </div>
-      <h2 className="text-xl font-medium text-white">{title}</h2>
+      <h2 className="text-xl font-medium text-foreground">{title}</h2>
     </div>
   )
 }
@@ -172,14 +172,14 @@ function ApplyForm({ job, onSubmitted }: { job: Job; onSubmitted: () => void }) 
             <div className="flex items-center gap-3 rounded-lg border border-gmg-gold/30 bg-gmg-gold/[0.06] px-4 py-3">
               <FileText className="h-5 w-5 shrink-0 text-gmg-gold" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-white">{resume.name}</p>
-                <p className="text-xs text-white/40">{formatSize(resume.size)}</p>
+                <p className="truncate text-sm font-medium text-foreground">{resume.name}</p>
+                <p className="text-xs text-foreground/40">{formatSize(resume.size)}</p>
               </div>
               <button
                 type="button"
                 aria-label="Remove attached resume"
                 onClick={() => { setResume(null); if (fileInputRef.current) fileInputRef.current.value = "" }}
-                className="rounded-md p-1.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-md p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -192,14 +192,14 @@ function ApplyForm({ job, onSubmitted }: { job: Job; onSubmitted: () => void }) 
               onDrop={(e) => { e.preventDefault(); setDragOver(false); acceptFile(e.dataTransfer.files?.[0]) }}
               className={cn(
                 "flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-7 text-center transition-colors",
-                dragOver ? "border-gmg-gold/70 bg-gmg-gold/[0.06]" : "border-white/15 bg-white/[0.02] hover:border-gmg-gold/40 hover:bg-white/[0.04]"
+                dragOver ? "border-gmg-gold/70 bg-gmg-gold/[0.06]" : "border-gray-300 bg-muted/50 hover:border-gmg-gold/40 hover:bg-muted"
               )}
             >
-              <UploadCloud className={cn("h-6 w-6", dragOver ? "text-gmg-gold" : "text-white/35")} />
-              <p className="text-sm text-white/70">
+              <UploadCloud className={cn("h-6 w-6", dragOver ? "text-gmg-gold" : "text-foreground/35")} />
+              <p className="text-sm text-foreground/70">
                 <span className="font-semibold text-gmg-gold">Click to upload</span> or drag and drop
               </p>
-              <p className="text-xs text-white/35">PDF, DOC or DOCX · up to 5 MB</p>
+              <p className="text-xs text-foreground/35">PDF, DOC or DOCX · up to 5 MB</p>
               <input ref={fileInputRef} id="resume" name="resume" type="file" accept=".pdf,.doc,.docx" className="sr-only" onChange={(e) => acceptFile(e.target.files?.[0])} />
             </label>
           )}
@@ -215,7 +215,7 @@ function ApplyForm({ job, onSubmitted }: { job: Job; onSubmitted: () => void }) 
           Submit application
           <ArrowRight className="h-4 w-4 transition-transform group-hover/submit:translate-x-0.5" />
         </button>
-        <p className="text-center text-xs text-white/35">Your details are only shared with the GMG recruitment team.</p>
+        <p className="text-center text-xs text-foreground/35">Your details are only shared with the GMG recruitment team.</p>
       </div>
     </form>
   )
@@ -231,10 +231,10 @@ export function ApplyPage() {
 
   if (!job) {
     return (
-      <main className="bg-gmg-dark py-24 text-center text-white">
+      <main className="bg-background py-24 text-center text-foreground">
         <div className="container">
           <h1 className="text-2xl font-bold">Job not found</h1>
-          <p className="mt-2 text-white/60">This role may have been closed or removed.</p>
+          <p className="mt-2 text-foreground/60">This role may have been closed or removed.</p>
           <Button asChild className="mt-6">
             <Link to="/">
               <ArrowLeft className="h-4 w-4" /> Back to all jobs
@@ -246,9 +246,9 @@ export function ApplyPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gmg-dark text-white">
+    <main className="min-h-screen bg-background text-foreground">
       <div className="container py-8">
-        <Button asChild variant="ghost" size="sm" className="mb-6 text-white/70 hover:bg-white/5 hover:text-white">
+        <Button asChild variant="ghost" size="sm" className="mb-6 text-foreground/70 hover:bg-muted hover:text-foreground">
           <Link to={`/jobs/${job.id}`}>
             <ArrowLeft className="h-4 w-4" /> Back to job details
           </Link>
@@ -261,7 +261,7 @@ export function ApplyPage() {
               <span className="block h-1 w-12 rounded-full bg-gmg-gold" />
               <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.2em] text-gmg-gold">Job application</p>
               <h1 className="mt-1.5 text-2xl font-bold leading-tight md:text-3xl">{job.title}</h1>
-              <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-white/50">
+              <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-foreground/50">
                 {job.department && (
                   <span className="inline-flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5" />{job.department}</span>
                 )}
@@ -274,24 +274,24 @@ export function ApplyPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-              <h3 className="text-sm font-semibold text-white/70">Role overview</h3>
+            <div className="rounded-2xl border bg-muted/30 p-6">
+              <h3 className="text-sm font-semibold text-foreground/70">Role overview</h3>
               <dl className="mt-4 space-y-3 text-sm">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-white/40">Department</dt>
-                  <dd className="text-right font-medium text-white">{job.department}</dd>
+                  <dt className="text-foreground/40">Department</dt>
+                  <dd className="text-right font-medium text-foreground">{job.department}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-white/40">Location</dt>
-                  <dd className="text-right font-medium text-white">{locationString(job)}</dd>
+                  <dt className="text-foreground/40">Location</dt>
+                  <dd className="text-right font-medium text-foreground">{locationString(job)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-white/40">Type</dt>
-                  <dd className="text-right font-medium text-white">{job.jobType}</dd>
+                  <dt className="text-foreground/40">Type</dt>
+                  <dd className="text-right font-medium text-foreground">{job.jobType}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-white/40">Experience</dt>
-                  <dd className="text-right font-medium text-white">{job.experience}</dd>
+                  <dt className="text-foreground/40">Experience</dt>
+                  <dd className="text-right font-medium text-foreground">{job.experience}</dd>
                 </div>
               </dl>
               <div className="mt-5 flex flex-wrap gap-2">
@@ -300,29 +300,29 @@ export function ApplyPage() {
               </div>
             </div>
 
-            <p className="text-xs leading-relaxed text-white/40">
+            <p className="text-xs leading-relaxed text-foreground/40">
               Think this role is a fit? Fill in the form and our recruitment team will reach out to you soon.
             </p>
           </aside>
 
           {/* Right column — the application form */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 sm:p-8">
+          <div className="rounded-2xl border bg-white p-6 sm:p-8">
             {submitted ? (
               <div className="flex flex-col items-center gap-4 py-16 text-center duration-300 animate-in fade-in zoom-in-95">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gmg-gold/10 ring-1 ring-gmg-gold/40">
                   <CheckCircle2 className="h-8 w-8 text-gmg-gold" />
                 </div>
                 <h2 className="text-xl font-bold">Application received!</h2>
-                <p className="max-w-sm text-sm leading-relaxed text-white/60">
+                <p className="max-w-sm text-sm leading-relaxed text-foreground/60">
                   Thanks for your interest in{" "}
-                  <span className="font-medium text-white">{job.title}</span>. Your application
+                  <span className="font-medium text-foreground">{job.title}</span>. Your application
                   has been recorded, and our recruitment team will reach out to you soon.
                 </p>
                 <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                   <Button asChild>
                     <Link to={`/jobs/${job.id}`}>Back to job details</Link>
                   </Button>
-                  <Button variant="outline" className="border-white/15 bg-white/[0.04] text-white hover:bg-white/10 hover:text-white" onClick={() => setSubmitted(false)}>
+                  <Button variant="outline" className="border-gray-200 bg-muted/50 text-foreground hover:bg-muted hover:text-foreground" onClick={() => setSubmitted(false)}>
                     Submit another application
                   </Button>
                 </div>
@@ -330,7 +330,7 @@ export function ApplyPage() {
             ) : (
               <>
                 <h2 className="text-lg font-bold">Apply for this role</h2>
-                <p className="mt-1.5 text-sm text-white/50">
+                <p className="mt-1.5 text-sm text-foreground/50">
                   Tell us a little about yourself. Your details are saved and shared with our recruitment team.
                 </p>
                 <div className="mt-6">

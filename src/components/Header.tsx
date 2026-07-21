@@ -21,7 +21,7 @@ const nav = [
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-gmg-black/95 text-white backdrop-blur supports-[backdrop-filter]:bg-gmg-black/85">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 text-foreground backdrop-blur supports-[backdrop-filter]:bg-white/85">
       <div className="container flex h-20 items-center justify-between">
         <a href="https://gautammodigroup.com/" className="flex items-center gap-3">
           <img src={GMG_LOGO} alt="Gautam Modi Group" className="h-11 w-auto" />
@@ -34,7 +34,7 @@ export function Header() {
             <a
               key={item.label}
               href={item.href}
-              className="rounded-md px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:text-gmg-gold"
+              className="rounded-md px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:text-gmg-gold"
             >
               {item.label}
             </a>
@@ -54,7 +54,7 @@ export function Header() {
               target="_blank"
               rel="noreferrer"
               aria-label={name}
-              className="flex h-9 w-9 items-center justify-center rounded-md text-white/70 transition-colors hover:bg-white/10 hover:text-gmg-gold"
+              className="flex h-9 w-9 items-center justify-center rounded-md text-foreground/50 transition-colors hover:bg-muted hover:text-gmg-gold"
             >
               <Icon className="h-4 w-4" />
             </a>
