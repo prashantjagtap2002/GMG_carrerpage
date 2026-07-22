@@ -139,7 +139,8 @@ export function JobsManager() {
                 onEdit={openEdit}
                 onDelete={handleDelete}
               />
-            ))}
+              ))
+            )}
           </tbody>
         </table>
         {filtered.length === 0 && (
