@@ -169,6 +169,7 @@ if (typeof window !== "undefined") {
         hiddenIds: loadHiddenIds(),
         applications: loadApplications(),
         notes: loadNotes(),
+        isJobsLoading: state.isJobsLoading,
       }
       emit()
     }
@@ -337,9 +338,6 @@ export function useCrmState(): CrmState {
   return useSyncExternalStore(subscribe, getState, getState)
 }
 
-export function useNotes(applicationId: string) {
-  return useSyncExternalStore(subscribe, () => state.notes.filter((n) => n.applicationId === applicationId))
-}
 
 export function useIsJobsLoading() {
   return useSyncExternalStore(subscribe, () => state.isJobsLoading)
