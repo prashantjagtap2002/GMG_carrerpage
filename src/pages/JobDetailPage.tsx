@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom"
-import { ArrowLeft, Briefcase, Building2, Clock, MapPin, Share2 } from "lucide-react"
+import { ArrowLeft, Briefcase, Building2, Award, MapPin, Share2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -69,7 +69,7 @@ export function JobDetailPage() {
                     </span>
                     {job.experience && job.experience !== "Not specified" && (
                       <span className="inline-flex items-center gap-1.5">
-                        <Clock className="h-4 w-4" /> {job.experience}
+                        <Award className="h-4 w-4" /> {job.experience}{/^\d+[-+]?$/.test(job.experience.trim()) ? ' Yrs Exp' : ''}
                       </span>
                     )}
                   </div>
