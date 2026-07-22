@@ -12,8 +12,10 @@ import {
   updateJob,
   useAllJobs,
   useCustomJobs,
+  useIsJobsLoading,
   useSeededCustomizationCount,
 } from "@/lib/crm-store"
+import { Loader2 } from "lucide-react"
 import { formatDate, locationString, type Job } from "@/data/jobs"
 
 export function JobsManager() {
@@ -21,6 +23,7 @@ export function JobsManager() {
   const customJobs = useCustomJobs()
   const customIds = useMemo(() => new Set(customJobs.map((j) => j.id)), [customJobs])
   const customizationCount = useSeededCustomizationCount()
+  const isJobsLoading = useIsJobsLoading()
 
   const [query, setQuery] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -112,7 +115,23 @@ export function JobsManager() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {filtered.map((job) => (
+            {isJobsLoading ? (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Loader2 className="h-6 w-6 animate-spin text-gmg-gold" />
+                    <span>Loading jobs...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                  No jobs found.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((job) => (
               <Row
                 key={job.id}
                 job={job}

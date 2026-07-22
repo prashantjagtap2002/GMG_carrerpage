@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/select"
 import { JobCard } from "@/components/JobCard"
 import { JobFilters, type FilterGroup } from "@/components/JobFilters"
-import { useAllJobs } from "@/lib/crm-store"
+import { useAllJobs, useIsJobsLoading } from "@/lib/crm-store"
+import { Loader2 } from "lucide-react"
 
 // Build filter options with a count of matching roles (like the IIDE filters).
 function withCounts(getValue: (v: string) => number) {
@@ -22,6 +23,7 @@ export function HomePage() {
   const [loc, setLoc] = useState<string[]>([])
   const [type, setType] = useState<string[]>([])
   const [sort, setSort] = useState("newest")
+  const isJobsLoading = useIsJobsLoading()
 
   const allJobs = useAllJobs()
   const departments = useMemo(() => Array.from(new Set(allJobs.map((j) => j.department))).sort(), [allJobs])
@@ -110,7 +112,12 @@ export function HomePage() {
               </Select>
             </div>
 
-            {filtered.length === 0 ? (
+            {isJobsLoading ? (
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-16 text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-gmg-gold mb-4" />
+                <p className="text-lg font-medium">Loading open roles...</p>
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="rounded-lg border border-dashed p-16 text-center">
                 <p className="text-lg font-medium">No jobs match your search</p>
                 <p className="mt-1 text-sm text-muted-foreground">Try clearing some filters.</p>

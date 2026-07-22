@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { Download, Eye, RefreshCw, Search, Trash2 } from "lucide-react"
+import { Download, Eye, RefreshCw, Search, Trash2, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -73,6 +73,7 @@ export function ApplicationsManager() {
   // Applications live in Supabase — poll while this tab is open so a
   // submission from another device shows up without a manual reload.
   useEffect(() => {
+    void handleRefresh()
     const interval = setInterval(() => void refreshApplications(), 20_000)
     return () => clearInterval(interval)
   }, [])
@@ -184,9 +185,14 @@ export function ApplicationsManager() {
           </SelectContent>
         </Select>
       </div>
-      {filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-12 text-center">
-          <p className="font-medium">No applications yet</p>
+      {refreshing && apps.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-16 text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-gmg-gold mb-4" />
+          <p className="text-lg font-medium">Loading applications...</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-16 text-center">
+          <p className="text-lg font-medium">No applications yet</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Applications submitted through the portal's &ldquo;I&apos;m interested&rdquo; form will
             appear here.
