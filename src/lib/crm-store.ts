@@ -81,13 +81,21 @@ export async function fetchJSON<T>(path: string): Promise<T | undefined> {
   }
 }
 
-/** Pull the current job catalogue from Supabase — public, every visitor needs it. */
 export async function refreshJobs(): Promise<void> {
   const body = await fetchJSON<{ customJobs: CustomJob[]; overrides: Record<string, JobOverride>; hiddenIds: string[] }>(
     "jobs-list",
   )
-  if (!body) return
-  setState({ ...state, customJobs: body.customJobs, overrides: body.overrides, hiddenIds: body.hiddenIds })
+  if (!body) {
+    setState({ ...state, isJobsLoading: false })
+    return
+  }
+  setState({ 
+    ...state, 
+    customJobs: body.customJobs, 
+    overrides: body.overrides, 
+    hiddenIds: body.hiddenIds,
+    isJobsLoading: false
+  })
   saveCustomJobs(body.customJobs)
   saveOverrides(body.overrides)
   saveHiddenIds(body.hiddenIds)
@@ -111,6 +119,7 @@ type CrmState = {
   hiddenIds: string[]
   applications: Application[]
   notes: Note[]
+  isJobsLoading: boolean
 }
 
 let state: CrmState = {
@@ -119,6 +128,7 @@ let state: CrmState = {
   hiddenIds: loadHiddenIds(),
   applications: loadApplications(),
   notes: loadNotes(),
+  isJobsLoading: true,
 }
 
 const listeners = new Set<() => void>()
@@ -325,6 +335,14 @@ export function deleteNote(id: string) {
 
 export function useCrmState(): CrmState {
   return useSyncExternalStore(subscribe, getState, getState)
+}
+
+export function useNotes(applicationId: string) {
+  return useSyncExternalStore(subscribe, () => state.notes.filter((n) => n.applicationId === applicationId))
+}
+
+export function useIsJobsLoading() {
+  return useSyncExternalStore(subscribe, () => state.isJobsLoading)
 }
 
 export function useAllJobs() {

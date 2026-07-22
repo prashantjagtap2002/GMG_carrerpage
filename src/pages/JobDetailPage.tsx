@@ -5,13 +5,24 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { JobDescription } from "@/components/JobDescription"
 import { formatDate, locationString } from "@/data/jobs"
-import { useJobById } from "@/lib/crm-store"
+import { useIsJobsLoading, useJobById } from "@/lib/crm-store"
+import { Loader2 } from "lucide-react"
 
 export function JobDetailPage() {
   const { id } = useParams<{ id: string }>()
   const job = useJobById(id)
+  const isJobsLoading = useIsJobsLoading()
 
   if (!job) {
+    if (isJobsLoading) {
+      return (
+        <main className="container flex min-h-[400px] flex-col items-center justify-center py-24 text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-gmg-gold" />
+          <h1 className="mt-4 text-xl font-medium">Loading job details...</h1>
+        </main>
+      )
+    }
+
     return (
       <main className="container py-24 text-center">
         <h1 className="text-2xl font-bold">Job not found</h1>
