@@ -1,6 +1,4 @@
-import { getAuthToken } from "@/lib/crm-store"
-
-const FN_BASE = "/.netlify/functions"
+import { getAuthToken, FN_BASE } from "@/lib/crm-store"
 
 export type AdminUser = {
   id: string

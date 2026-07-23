@@ -1,5 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react"
 import { seededJobs, type Job } from "@/data/jobs"
+import { toastError } from "@/lib/toast"
 import {
   DEFAULT_STAGE,
   loadApplications,
@@ -26,7 +27,7 @@ import {
 // & notes are admin-only. localStorage is kept as an offline cache so the UI
 // still has something to show before the first fetch resolves.
 
-const FN_BASE = "/.netlify/functions"
+export const FN_BASE = "/.netlify/functions"
 
 /**
  * Current Clerk session token, if any. Read via the `window.Clerk` global
@@ -59,12 +60,15 @@ export async function syncFetch(path: string, method: string, body?: unknown): P
       body: body !== undefined ? JSON.stringify(body) : undefined,
     })
     if (!res.ok) {
-      console.error(`Sync failed (${method} ${path}): HTTP ${res.status}`, await res.text().catch(() => ""))
+      const text = await res.text().catch(() => "")
+      console.error(`Sync failed (${method} ${path}): HTTP ${res.status}`, text)
+      toastError("Changes couldn't be saved. Please check your connection and try again.")
       return false
     }
     return true
   } catch (err) {
     console.error(`Failed to sync (${method} ${path}):`, err)
+    toastError("Changes couldn't be saved. Please check your connection and try again.")
     return false
   }
 }

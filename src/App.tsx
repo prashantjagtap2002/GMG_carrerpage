@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react"
 import { Route, Routes, useLocation } from "react-router-dom"
 import { Hero } from "@/components/Hero"
+import { ToastContainer } from "@/components/ToastContainer"
 import { HomePage } from "@/pages/HomePage"
 import { JobDetailPage } from "@/pages/JobDetailPage"
 import { ApplyPage } from "@/pages/ApplyPage"
@@ -83,6 +84,7 @@ export default function App() {
           }
         />
       </Routes>
+      <ToastContainer />
     </div>
   )
 }

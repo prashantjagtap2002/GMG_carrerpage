@@ -77,7 +77,7 @@ const handler: Handler = async (event) => {
 
       return jsonResponse(200, {
         users: mappedUsers,
-        invitations: invitations.map((i) => ({
+        invitations: (invitations ?? []).map((i) => ({
           id: i.id,
           emailAddress: i.emailAddress,
           status: i.status,
