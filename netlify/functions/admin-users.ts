@@ -48,7 +48,13 @@ const handler: Handler = async (event) => {
     return jsonResponse(401, { error: "Unauthorized" })
   }
 
-  const clerkClient = getClerkClient()
+  let clerkClient
+  try {
+    clerkClient = getClerkClient()
+  } catch (err) {
+    console.error("Failed to initialize Clerk client:", err)
+    return jsonResponse(500, { error: "Authentication service unavailable" })
+  }
 
   try {
     if (event.httpMethod === "GET") {

@@ -60,8 +60,9 @@ function AdminUsersSection() {
       const data = await listAdminUsers()
       setUsers(data.users)
       setInvitations(data.invitations)
-    } catch {
-      setError("Couldn't load admin users.")
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't load admin users.")
     } finally {
       setLoading(false)
     }

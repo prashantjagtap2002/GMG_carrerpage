@@ -24,7 +24,10 @@ async function authedFetch<T>(path: string, method: string, body?: unknown): Pro
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
-  if (!res.ok) throw new Error(`${path} responded ${res.status}`)
+  if (!res.ok) {
+    const text = await res.text().catch(() => "")
+    throw new Error(`${path} responded ${res.status}${text ? `: ${text}` : ""}`)
+  }
   return (await res.json()) as T
 }
 
