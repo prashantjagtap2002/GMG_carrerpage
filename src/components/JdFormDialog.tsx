@@ -81,6 +81,7 @@ export function JdFormDialog({
   initial?: Job | null
 }) {
   const [values, setValues] = useState<JdFormValues>(emptyValues())
+  const [validationError, setValidationError] = useState<string | null>(null)
   const allJobs = useAllJobs()
   const departments = Array.from(new Set(allJobs.map((j) => j.department).filter(Boolean))).sort()
 
@@ -95,7 +96,15 @@ export function JdFormDialog({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!values.title.trim() || htmlIsEmpty(values.description)) return
+    if (!values.title.trim()) {
+      setValidationError("Please enter a job title.")
+      return
+    }
+    if (htmlIsEmpty(values.description)) {
+      setValidationError("Please write a job description.")
+      return
+    }
+    setValidationError(null)
     onSubmit({
       ...values,
       title: values.title.trim(),
@@ -218,6 +227,9 @@ export function JdFormDialog({
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
+            {validationError && (
+              <p className="mr-auto self-center text-sm text-destructive">{validationError}</p>
+            )}
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

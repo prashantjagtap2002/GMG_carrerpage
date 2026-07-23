@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useRef, useMemo, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import {
   ArrowLeft, ArrowRight, Briefcase, Building2, CheckCircle2, ChevronDown, Clock,
@@ -78,6 +78,7 @@ function ApplyForm({ job, onSubmitted }: { job: Job; onSubmitted: () => void }) 
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const allJobs = useAllJobs()
+  const jobTitleMap = useMemo(() => new Map(allJobs.map((j) => [j.title, j.id])), [allJobs])
   const jobTitles = Array.from(new Set(allJobs.map((j) => j.title))).sort()
 
   function acceptFile(f: File | undefined | null) {
@@ -91,9 +92,9 @@ function ApplyForm({ job, onSubmitted }: { job: Job; onSubmitted: () => void }) 
     const form = e.currentTarget as HTMLFormElement
     const data = new FormData(form)
     const applyingFor = String(data.get("applyingFor") || job.title)
-    const matched = allJobs.find((j) => j.title === applyingFor)
+    const jobId = jobTitleMap.get(applyingFor) ?? job.id
     const created = addApplication({
-      jobId: matched?.id ?? job.id,
+      jobId,
       jobTitle: applyingFor,
       firstName: String(data.get("firstName") || ""),
       lastName: String(data.get("lastName") || ""),

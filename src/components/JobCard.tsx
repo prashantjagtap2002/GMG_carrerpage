@@ -22,6 +22,7 @@ export function JobCard({ job }: { job: Job }) {
     <Card
       tabIndex={0}
       role="link"
+      aria-label={job.title}
       onClick={() => navigate(href)}
       onKeyDown={handleKeyDown}
       className="group flex cursor-pointer flex-col gap-4 p-5 outline-none transition-all hover:border-gmg-gold/50 hover:shadow-[0_0_24px_rgba(255,180,0,0.07)] focus-visible:border-gmg-gold/50 focus-visible:shadow-[0_0_24px_rgba(255,180,0,0.07)] md:flex-row md:items-center md:justify-between"

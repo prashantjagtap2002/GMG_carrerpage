@@ -96,14 +96,22 @@ function AdminUsersSection() {
   async function confirmRemove(e: React.FormEvent) {
     e.preventDefault()
     if (enteredPin !== removePin || !removeConfirmId) return
-    await removeAdminUser(removeConfirmId)
-    setRemoveConfirmId(null)
-    await refresh()
+    try {
+      await removeAdminUser(removeConfirmId)
+      setRemoveConfirmId(null)
+      await refresh()
+    } catch {
+      setError("Couldn't remove admin. Please try again.")
+    }
   }
 
   async function handleRevoke(id: string) {
-    await revokeAdminInvitation(id)
-    await refresh()
+    try {
+      await revokeAdminInvitation(id)
+      await refresh()
+    } catch {
+      setError("Couldn't revoke invitation. Please try again.")
+    }
   }
 
   return (

@@ -215,8 +215,17 @@ export function ApplicationsManager() {
               {filtered.map((a) => (
                 <tr
                   key={a.id}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View application from ${applicantName(a)}`}
                   className="cursor-pointer hover:bg-muted/30"
                   onClick={() => setSelectedId(a.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      setSelectedId(a.id)
+                    }
+                  }}
                 >
                   <td className="px-4 py-3">
                     <div className="font-medium">{applicantName(a)}</div>
@@ -236,7 +245,7 @@ export function ApplicationsManager() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="View details"
+                        aria-label="View details"
                         onClick={(e) => {
                           e.stopPropagation()
                           setSelectedId(a.id)
@@ -247,7 +256,7 @@ export function ApplicationsManager() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="Delete"
+                        aria-label="Delete"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleDelete(a)

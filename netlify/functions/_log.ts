@@ -16,7 +16,7 @@ export async function logActivity(params: {
   try {
     const supabase = getSupabase()
     const { error } = await supabase.from("activity_log").insert({
-      id: `log-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+      id: `log-${crypto.randomUUID()}`,
       actor_email: params.actor?.email ?? null,
       actor_name: params.actor?.name ?? null,
       action: params.action,

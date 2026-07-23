@@ -178,18 +178,18 @@ function Row({
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-1">
-          <Button asChild variant="ghost" size="icon" title="View on portal">
+          <Button asChild variant="ghost" size="icon" aria-label="View on portal">
             <Link to={`/jobs/${job.id}`}>
               <Eye className="h-4 w-4" />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" title="Edit" onClick={() => onEdit(job)}>
+          <Button variant="ghost" size="icon" aria-label="Edit" onClick={() => onEdit(job)}>
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            title="Delete"
+            aria-label="Delete"
             onClick={() => onDelete(job)}
             className="text-destructive hover:text-destructive"
           >
