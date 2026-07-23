@@ -21,26 +21,31 @@ type MirrorUser = { id: string; email: string; name: string; createdAt: number }
 
 /** Keeps the read-only `admin_users` Supabase table in step with Clerk's live user list. */
 async function syncAdminUsersMirror(users: MirrorUser[]) {
-  const supabase = getSupabase()
-  if (users.length > 0) {
-    const { error } = await supabase.from("admin_users").upsert(
-      users.map((u) => ({
-        id: u.id,
-        email: u.email,
-        name: u.name || null,
-        created_at: new Date(u.createdAt).toISOString(),
-        synced_at: new Date().toISOString(),
-      })),
-      { onConflict: "id" },
-    )
-    if (error) console.error("Failed to sync admin_users mirror:", error)
-  }
+  try {
+    const supabase = getSupabase()
+    if (users.length > 0) {
+      const { error } = await supabase.from("admin_users").upsert(
+        users.map((u) => ({
+          id: u.id,
+          email: u.email,
+          name: u.name || null,
+          created_at: u.createdAt ? new Date(u.createdAt).toISOString() : new Date().toISOString(),
+          synced_at: new Date().toISOString(),
+        })),
+        { onConflict: "id" },
+      )
+      if (error) console.error("Failed to sync admin_users mirror:", error)
 
-  const { error: staleError } = await supabase
-    .from("admin_users")
-    .delete()
-    .not("id", "in", `(${users.map((u) => `"${u.id.replace(/"/g, '""')}"`).join(",") || "''"})`)
-  if (staleError) console.error("Failed to prune admin_users mirror:", staleError)
+      const ids = users.map((u) => `"${u.id.replace(/"/g, '""')}"`).join(",")
+      const { error: staleError } = await supabase
+        .from("admin_users")
+        .delete()
+        .not("id", "in", `(${ids})`)
+      if (staleError) console.error("Failed to prune admin_users mirror:", staleError)
+    }
+  } catch (err) {
+    console.error("syncAdminUsersMirror failed:", err)
+  }
 }
 
 const handler: Handler = async (event) => {
