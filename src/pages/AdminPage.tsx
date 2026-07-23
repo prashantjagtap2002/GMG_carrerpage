@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import { Briefcase, ExternalLink, Settings, ShieldAlert, Users } from "lucide-react"
-import { SignIn, UserButton, useAuth, useUser } from "@clerk/clerk-react"
+import { SignIn, SignUp, UserButton, useAuth, useUser } from "@clerk/clerk-react"
 import { Button } from "@/components/ui/button"
 import { JobsManager } from "@/components/JobsManager"
 import { ApplicationsManager } from "@/components/ApplicationsManager"
@@ -155,7 +155,11 @@ export function AdminPage() {
               Sign in to manage job descriptions and applications.
             </p>
           </div>
-          <SignIn routing="hash" fallbackRedirectUrl="/admin" />
+          {searchParams.get("__clerk_ticket") ? (
+            <SignUp routing="hash" fallbackRedirectUrl="/admin" />
+          ) : (
+            <SignIn routing="hash" fallbackRedirectUrl="/admin" />
+          )}
           <Link to="/" className="text-xs text-foreground/50 transition-colors hover:text-foreground">
             ← Back to careers site
           </Link>
