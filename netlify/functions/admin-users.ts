@@ -94,9 +94,11 @@ const handler: Handler = async (event) => {
         return jsonResponse(400, { error: "Invalid email address" })
       }
 
+      const siteUrl = process.env.URL || process.env.SITE_URL || "http://localhost:5173"
       const invitation = await clerkClient.invitations.createInvitation({
         emailAddress,
         notify: true,
+        redirectUrl: `${siteUrl}/admin`,
       })
       await logActivity({
         actor: await getActor(event),
