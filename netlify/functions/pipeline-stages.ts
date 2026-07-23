@@ -43,7 +43,7 @@ const handler: Handler = async (event) => {
         sort_order: typeof data.sortOrder === "number" ? data.sortOrder : 0,
       })
       if (error) throw error
-      void logActivity({
+      await logActivity({
         actor,
         action: "pipeline_stage.create",
         entityType: "pipeline_stage",
@@ -62,7 +62,7 @@ const handler: Handler = async (event) => {
       if ("color" in patch) update.color = patch.color
       const { error } = await supabase.from("pipeline_stages").update(update).eq("id", data.id)
       if (error) throw error
-      void logActivity({
+      await logActivity({
         actor,
         action: "pipeline_stage.update",
         entityType: "pipeline_stage",
@@ -77,7 +77,7 @@ const handler: Handler = async (event) => {
       if (!data.id) return jsonResponse(400, { error: "Missing id" })
       const { error } = await supabase.from("pipeline_stages").delete().eq("id", data.id)
       if (error) throw error
-      void logActivity({
+      await logActivity({
         actor,
         action: "pipeline_stage.delete",
         entityType: "pipeline_stage",
@@ -97,7 +97,7 @@ const handler: Handler = async (event) => {
       )
       const failed = results.find((r) => r.error)
       if (failed?.error) throw failed.error
-      void logActivity({
+      await logActivity({
         actor,
         action: "pipeline_stage.reorder",
         entityType: "pipeline_stage",

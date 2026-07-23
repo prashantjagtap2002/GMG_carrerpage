@@ -19,18 +19,20 @@ const handler: Handler = async (event) => {
 
     if (Array.isArray(data.ids)) {
       if (data.ids.length === 0) return jsonResponse(200, { success: true })
-      const { error } = await supabase.from("applications").delete().in("id", data.ids)
+      const { data: deleted, error } = await supabase.from("applications").delete().in("id", data.ids).select("id")
       if (error) throw error
-      void logActivity({
+      if (deleted.length === 0) return jsonResponse(404, { error: "No applications found" })
+      await logActivity({
         actor,
         action: "application.delete",
         entityType: "application",
         summary: `Deleted ${data.ids.length} applications`,
       })
     } else if (data.id) {
-      const { error } = await supabase.from("applications").delete().eq("id", data.id)
+      const { data: deleted, error } = await supabase.from("applications").delete().eq("id", data.id).select("id")
       if (error) throw error
-      void logActivity({
+      if (deleted.length === 0) return jsonResponse(404, { error: "Application not found" })
+      await logActivity({
         actor,
         action: "application.delete",
         entityType: "application",

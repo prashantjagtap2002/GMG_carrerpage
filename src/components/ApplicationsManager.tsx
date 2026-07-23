@@ -104,19 +104,19 @@ export function ApplicationsManager() {
     })
   }, [apps, query, jobFilter])
 
-  function handleDelete(a: Application) {
+  async function handleDelete(a: Application) {
     if (window.confirm(`Delete application from ${applicantName(a)}?`)) {
-      deleteApplication(a.id)
-      void deleteResume(a.id)
       if (selectedId === a.id) setSelectedId(null)
+      await deleteApplication(a.id)
+      await deleteResume(a.id)
     }
   }
-  function handleClear() {
+  async function handleClear() {
     if (apps.length === 0) return
     if (window.confirm(`Delete all ${apps.length} applications? This cannot be undone.`)) {
-      apps.forEach((a) => void deleteResume(a.id))
-      clearApplications()
       setSelectedId(null)
+      await Promise.all(apps.map((a) => deleteResume(a.id)))
+      await clearApplications()
     }
   }
 

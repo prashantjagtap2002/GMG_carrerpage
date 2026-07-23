@@ -21,7 +21,7 @@ const handler: Handler = async (event) => {
         created_at: data.createdAt,
       })
       if (error) throw error
-      void logActivity({
+      await logActivity({
         actor: await getActor(event),
         action: "note.create",
         entityType: "application",
@@ -34,9 +34,10 @@ const handler: Handler = async (event) => {
     if (event.httpMethod === "DELETE") {
       const data = JSON.parse(event.body || "{}")
       if (!data.id) return jsonResponse(400, { error: "Missing id" })
-      const { error } = await supabase.from("notes").delete().eq("id", data.id)
+      const { data: deleted, error } = await supabase.from("notes").delete().eq("id", data.id).select("id")
       if (error) throw error
-      void logActivity({
+      if (deleted.length === 0) return jsonResponse(404, { error: "Note not found" })
+      await logActivity({
         actor: await getActor(event),
         action: "note.delete",
         entityType: "application",

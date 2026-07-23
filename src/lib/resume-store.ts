@@ -21,14 +21,19 @@ function authHeaders(extra?: Record<string, string>): Record<string, string> {
 /** Persist a resume file under an application id. */
 export async function saveResume(id: string, file: File): Promise<void> {
   if (!WORKER_URL) return
-  await fetch(`${WORKER_URL}/resumes/${id}`, {
-    method: "PUT",
-    headers: authHeaders({
-      "Content-Type": file.type || "application/octet-stream",
-      "X-Resume-Name": encodeURIComponent(file.name),
-    }),
-    body: file,
-  })
+  try {
+    const res = await fetch(`${WORKER_URL}/resumes/${id}`, {
+      method: "PUT",
+      headers: authHeaders({
+        "Content-Type": file.type || "application/octet-stream",
+        "X-Resume-Name": encodeURIComponent(file.name),
+      }),
+      body: file,
+    })
+    if (!res.ok) console.error(`Failed to save resume ${id}: HTTP ${res.status}`)
+  } catch (err) {
+    console.error(`Failed to save resume ${id}:`, err)
+  }
 }
 
 /** Fetch a stored resume, or undefined if none was saved for this application. */
@@ -48,5 +53,10 @@ export async function getResume(id: string): Promise<StoredResume | undefined> {
 /** Remove a stored resume (called when its application is deleted). */
 export async function deleteResume(id: string): Promise<void> {
   if (!WORKER_URL) return
-  await fetch(`${WORKER_URL}/resumes/${id}`, { method: "DELETE", headers: authHeaders() })
+  try {
+    const res = await fetch(`${WORKER_URL}/resumes/${id}`, { method: "DELETE", headers: authHeaders() })
+    if (!res.ok) console.error(`Failed to delete resume ${id}: HTTP ${res.status}`)
+  } catch (err) {
+    console.error(`Failed to delete resume ${id}:`, err)
+  }
 }

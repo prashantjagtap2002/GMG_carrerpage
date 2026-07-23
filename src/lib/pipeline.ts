@@ -65,7 +65,10 @@ type RemoteStage = { id: string; label: string; color: string; sort_order: numbe
 /** Pull the current pipeline stages from Supabase — admin-only, called once a CRM session is available. */
 export async function refreshPipelineStages(): Promise<void> {
   const body = await fetchJSON<{ stages: RemoteStage[] }>("pipeline-stages")
-  if (!body) return
+  if (!body) {
+    console.error("Failed to refresh pipeline stages — keeping cached data")
+    return
+  }
   currentStages = body.stages
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order)
@@ -79,34 +82,46 @@ export function usePipelineStore() {
   function addStage(stage: Omit<PipelineStage, "id">) {
     const id = stage.label.toLowerCase().replace(/[^a-z0-9]/g, "-") + "-" + Date.now()
     const sortOrder = currentStages.length
+    const prevStages = currentStages
     currentStages = [...currentStages, { id, ...stage }]
     emit()
-    void syncFetch("pipeline-stages", "POST", { id, label: stage.label, color: stage.color, sortOrder })
+    syncFetch("pipeline-stages", "POST", { id, label: stage.label, color: stage.color, sortOrder }).then((ok) => {
+      if (!ok) { currentStages = prevStages; emit() }
+    })
   }
 
   function updateStage(id: string, updates: Partial<Omit<PipelineStage, "id">>) {
+    const prevStages = currentStages
     currentStages = currentStages.map((s) => (s.id === id ? { ...s, ...updates } : s))
     emit()
-    void syncFetch("pipeline-stages", "PATCH", { id, patch: updates })
+    syncFetch("pipeline-stages", "PATCH", { id, patch: updates }).then((ok) => {
+      if (!ok) { currentStages = prevStages; emit() }
+    })
   }
 
   function deleteStage(id: string) {
+    const prevStages = currentStages
     currentStages = currentStages.filter((s) => s.id !== id)
     emit()
-    void syncFetch("pipeline-stages", "DELETE", { id })
+    syncFetch("pipeline-stages", "DELETE", { id }).then((ok) => {
+      if (!ok) { currentStages = prevStages; emit() }
+    })
   }
 
   function reorderStages(startIndex: number, endIndex: number) {
     const newStages = Array.from(currentStages)
     const [removed] = newStages.splice(startIndex, 1)
     newStages.splice(endIndex, 0, removed)
+    const prevStages = currentStages
     currentStages = newStages
     emit()
-    void syncFetch(
+    syncFetch(
       "pipeline-stages",
       "PUT",
       { ids: newStages.map((s) => s.id) },
-    )
+    ).then((ok) => {
+      if (!ok) { currentStages = prevStages; emit() }
+    })
   }
 
   return {

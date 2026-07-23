@@ -17,13 +17,15 @@ const handler: Handler = async (event) => {
     if (!data.id) return jsonResponse(400, { error: "Missing id" })
 
     const supabase = getSupabase()
+    const update: Record<string, unknown> = { stage: data.stage }
+    if (data.stageHistory !== undefined) update.stage_history = data.stageHistory
     const { error } = await supabase
       .from("applications")
-      .update({ stage: data.stage, stage_history: data.stageHistory || [] })
+      .update(update)
       .eq("id", data.id)
 
     if (error) throw error
-    void logActivity({
+    await logActivity({
       actor: await getActor(event),
       action: "application.stage_change",
       entityType: "application",

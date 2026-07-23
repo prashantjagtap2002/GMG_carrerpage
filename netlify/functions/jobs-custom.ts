@@ -30,7 +30,7 @@ const handler: Handler = async (event) => {
         created_at: data.createdAt,
       })
       if (error) throw error
-      void logActivity({
+      await logActivity({
         actor,
         action: "job.create",
         entityType: "job",
@@ -57,7 +57,7 @@ const handler: Handler = async (event) => {
 
       const { error } = await supabase.from("custom_jobs").update(update).eq("id", data.id)
       if (error) throw error
-      void logActivity({
+      await logActivity({
         actor,
         action: "job.update",
         entityType: "job",
@@ -70,9 +70,10 @@ const handler: Handler = async (event) => {
     if (event.httpMethod === "DELETE") {
       const data = JSON.parse(event.body || "{}")
       if (!data.id) return jsonResponse(400, { error: "Missing id" })
-      const { error } = await supabase.from("custom_jobs").delete().eq("id", data.id)
+      const { data: deleted, error } = await supabase.from("custom_jobs").delete().eq("id", data.id).select("id")
       if (error) throw error
-      void logActivity({
+      if (deleted.length === 0) return jsonResponse(404, { error: "Job not found" })
+      await logActivity({
         actor,
         action: "job.delete",
         entityType: "job",

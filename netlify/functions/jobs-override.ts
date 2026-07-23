@@ -21,7 +21,7 @@ const handler: Handler = async (event) => {
         .from("job_overrides")
         .upsert({ job_id: data.jobId, patch: data.patch || {} })
       if (error) throw error
-      void logActivity({
+      await logActivity({
         actor,
         action: "job.override",
         entityType: "job",

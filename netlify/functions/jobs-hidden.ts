@@ -18,7 +18,7 @@ const handler: Handler = async (event) => {
     if (event.httpMethod === "PUT") {
       const { error } = await supabase.from("hidden_jobs").upsert({ job_id: data.jobId })
       if (error) throw error
-      void logActivity({
+      await logActivity({
         actor: await getActor(event),
         action: "job.delete",
         entityType: "job",

@@ -86,7 +86,7 @@ const handler: Handler = async (event) => {
         emailAddress,
         notify: true,
       })
-      void logActivity({
+      await logActivity({
         actor: await getActor(event),
         action: "admin_user.invite",
         entityType: "admin_user",
@@ -105,9 +105,18 @@ const handler: Handler = async (event) => {
 
       const actor = await getActor(event)
       if (type === "user") {
+        if (actor && id === actor.id) {
+          return jsonResponse(400, { error: "Cannot remove yourself" })
+        }
+
+        const { data: users } = await clerkClient.users.getUserList({ limit: 100 })
+        if (users.length <= 1) {
+          return jsonResponse(400, { error: "Cannot remove the last admin" })
+        }
+
         await clerkClient.users.deleteUser(id)
         await getSupabase().from("admin_users").delete().eq("id", id)
-        void logActivity({
+        await logActivity({
           actor,
           action: "admin_user.remove",
           entityType: "admin_user",
@@ -116,7 +125,7 @@ const handler: Handler = async (event) => {
         })
       } else {
         await clerkClient.invitations.revokeInvitation(id)
-        void logActivity({
+        await logActivity({
           actor,
           action: "admin_user.revoke_invite",
           entityType: "admin_user",
