@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react"
 import { Route, Routes, useLocation } from "react-router-dom"
 import { Hero } from "@/components/Hero"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { ToastContainer } from "@/components/ToastContainer"
 import { HomePage } from "@/pages/HomePage"
 import { JobDetailPage } from "@/pages/JobDetailPage"
@@ -45,6 +46,7 @@ export default function App() {
   return (
     <div className="flex min-h-screen flex-col">
       <ScrollManager />
+      <ErrorBoundary>
       <Routes>
         {/* Mini CRM: standalone admin dashboard (no marketing chrome) */}
         <Route path="/admin" element={<AdminPage />} />
@@ -84,6 +86,7 @@ export default function App() {
           }
         />
       </Routes>
+      </ErrorBoundary>
       <ToastContainer />
     </div>
   )

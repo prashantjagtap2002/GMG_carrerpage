@@ -2,7 +2,11 @@
   "name": "iide-careers-clone",
   "private": true,
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

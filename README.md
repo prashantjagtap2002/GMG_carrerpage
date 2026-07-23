@@ -1,56 +1,69 @@
-# IIDE Careers — shadcn/ui recreation
+# GMG Careers — Careers Portal + Admin CRM
 
-A local recreation of the IIDE careers page (https://careers.iide.co/jobs/Careers/) built with
-**Vite + React + TypeScript + Tailwind + shadcn/ui**, seeded with the real 45 job openings.
-
-The key change from the original: **clicking any job opens a local detail page (`/jobs/:id`) on
-this site instead of redirecting to IIDE's Zoho Recruit account.** The "I'm interested" apply button
-opens a local apply form whose submissions are saved to the built-in mini CRM (see below) — no external redirect.
+A careers portal for Gautam Modi Group built with **Vite + React + TypeScript + Tailwind + shadcn/ui**.
+Features a public-facing job board and a private admin CRM with application tracking, pipeline management, and Clerk-based authentication.
 
 ## Routes
+
 - `/` — hero + job list with search, department/location/type filters and sort
-- `/jobs/:id` — local job detail page (full description + sticky apply sidebar + local apply dialog)
-- `/admin` — mini CRM: add/edit/delete Job Descriptions, view applications, and manage admin credentials (username + password, set in `.env`)
+- `/jobs/:id` — job detail page with full description
+- `/jobs/:id/apply` — public application form
+- `/admin` — mini CRM (Clerk-authenticated): Jobs, Applications, Settings
 
 ## Run
+
 ```bash
 npm install
-npm run dev      # start dev server (http://localhost:5173)
-npm run build    # type-check + production build
-npm run preview  # preview the production build
+npm run dev          # start dev server (http://localhost:5173)
+npm run build        # type-check + production build
+npm run preview      # preview the production build
+npm run lint         # ESLint check
+npm run format       # Prettier format
+npm run typecheck    # TypeScript check only
 ```
+
+## Environment
+
+Copy `.env.example` to `.env` and fill in:
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (client-safe) |
+| `CLERK_SECRET_KEY` | Clerk secret key (server-side only) |
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
+| `VITE_RESUME_WORKER_URL` | Cloudflare Worker for resume uploads |
+| `VITE_RESUME_ACCESS_TOKEN` | Worker access token |
 
 ## Mini CRM (`/admin`)
 
-A lightweight, browser-only CRM (data persisted in `localStorage`, no backend) for managing the
-careers portal:
+Auth is handled by **Clerk** with restricted (invite-only) sign-up and role-based access control.
 
-- **Job Descriptions tab** — add, edit and delete JDs. Added JDs appear on the public portal
-  immediately (merged with the seeded catalogue). Seeded JDs are read-only.
-- **Applications tab** — every submission from the public "I'm interested" form is listed here,
-  with search, filter-by-job, a detail dialog, delete and CSV export.
+- **Jobs tab** — add, edit, delete job descriptions synced to Supabase
+- **Applications tab** — view, search, filter, CSV export, and stage applications
+- **Settings tab** — pipeline stage editor, admin user management (invite/remove via Clerk API), activity log, account settings
 
-Sign in with the username and password defined in your `.env` file (`VITE_ADMIN_USERNAME` / `VITE_ADMIN_PASSWORD`, defaults to `admin` / `admin123`). Once signed in, the **Settings** tab lets the admin change both the username and password; those changes are saved in the browser (localStorage) and override the `.env` defaults. A discreet "Admin / CRM" link lives in the footer.
+## Architecture
 
-> Note: resume files are stored by name only (localStorage can't hold large files).
-
-## Structure
 ```
 src/
-  data/jobs.ts            Job type + loader (reads jobs_data.json, decodes entities, helpers)
-  data/jobs_data.json     Real 45 jobs (extracted from the live page)
-  components/ui/*         shadcn/ui primitives (button, card, input, badge, label, select, dialog)
-  components/*            Header, Hero, Footer, JobCard, JobDescription, ApplyDialog
-                          + CRM: JdFormDialog, JobsManager, ApplicationsManager, SettingsManager
-  pages/HomePage.tsx      list view
-  pages/JobDetailPage.tsx detail view (no redirect)
-  pages/AdminPage.tsx     mini CRM shell (login gate + tabs)
-  lib/storage.ts          CRM types + localStorage persistence
-  lib/crm-store.ts        reactive store (useSyncExternalStore) + hooks + actions
-  lib/auth-store.ts       admin credentials (.env defaults + localStorage override) + session
-  App.tsx, main.tsx       router + entry
-```
+  pages/                  Route-level components
+  components/             Shared UI components + CRM managers
+  components/ui/          shadcn/ui primitives
+  lib/                    Stores (crm-store, pipeline, admin-users, toast) + utilities
+  data/jobs.ts            Job type + helpers
 
-## Theme
-IIDE brand colors are wired into shadcn CSS variables in `src/index.css`:
-`--primary: #0E69B3` (hsl 207 86% 38%), text `#171B27`, muted `#646d8c`, font Lato.
+netlify/functions/        Serverless backend (Supabase + Clerk)
+  _auth.ts                Clerk session token verification
+  _supabase.ts            Supabase client + CORS helper
+  _log.ts                 Activity logging
+  apply.ts                Public application submission
+  jobs-*.ts               Job CRUD operations
+  applications-*.ts       Application operations
+  pipeline-stages.ts      Pipeline stage management
+  admin-users.ts          Clerk user/invitation management
+  notes.ts                Application notes
+  activity-log.ts         Activity log retrieval
+
+scripts/                  Build helpers + setup SQL
+```
