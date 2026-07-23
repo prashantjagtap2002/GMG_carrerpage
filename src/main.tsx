@@ -11,7 +11,11 @@ if (!CLERK_PUBLISHABLE_KEY) {
   throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY — set it in .env (see .env.example).")
 }
 
-// so Clerk's own widgets (<SignIn>, <UserProfile>, <UserButton>) blend in.
+const SIGN_IN_URL = import.meta.env.VITE_CLERK_SIGN_IN_URL || "/admin"
+const SIGN_UP_URL = import.meta.env.VITE_CLERK_SIGN_UP_URL || "/admin"
+const AFTER_SIGN_IN_URL = import.meta.env.VITE_CLERK_AFTER_SIGN_IN_URL || "/admin"
+const AFTER_SIGN_UP_URL = import.meta.env.VITE_CLERK_AFTER_SIGN_UP_URL || "/admin"
+
 const clerkAppearance = {
   variables: {
     colorPrimary: "#FFB400",
@@ -26,6 +30,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ClerkProvider
       publishableKey={CLERK_PUBLISHABLE_KEY}
       appearance={clerkAppearance}
+      signInUrl={SIGN_IN_URL}
+      signUpUrl={SIGN_UP_URL}
+      afterSignInUrl={AFTER_SIGN_IN_URL}
+      afterSignUpUrl={AFTER_SIGN_UP_URL}
       afterSignOutUrl="/admin"
       signInFallbackRedirectUrl="/admin"
       signUpFallbackRedirectUrl="/admin"

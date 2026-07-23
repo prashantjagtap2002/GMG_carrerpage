@@ -57,6 +57,15 @@ const handler: Handler = async (event) => {
         clerkClient.invitations.getInvitationList({ status: "pending", limit: 100 }),
       ])
 
+      const usersNeedingRole = users.filter((u) => (u.publicMetadata as { role?: string } | undefined)?.role !== "admin")
+      if (usersNeedingRole.length > 0) {
+        await Promise.allSettled(
+          usersNeedingRole.map((u) =>
+            clerkClient.users.updateUser(u.id, { publicMetadata: { role: "admin" } }).catch(() => {})
+          )
+        )
+      }
+
       const mappedUsers = users.map((u) => ({
         id: u.id,
         email: u.emailAddresses.find((e) => e.id === u.primaryEmailAddressId)?.emailAddress ?? u.emailAddresses[0]?.emailAddress ?? "",
