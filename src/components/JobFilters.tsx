@@ -27,7 +27,7 @@ function CheckboxRow({
       <span
         className={cn(
           "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
-          checked ? "border-primary bg-primary text-primary-foreground" : "border-input bg-background",
+          checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40 bg-background hover:border-muted-foreground/60",
         )}
       >
         {checked && <Check className="h-3 w-3" />}
