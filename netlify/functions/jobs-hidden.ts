@@ -34,7 +34,7 @@ const handler: Handler = async (event) => {
       return jsonResponse(200, { success: true })
     }
 
-    return { statusCode: 405, body: "Method Not Allowed" }
+    return jsonResponse(405, { error: "Method Not Allowed" })
   } catch (error) {
     console.error("Error handling hidden job:", error)
     return jsonResponse(500, { error: "Internal Server Error" })

@@ -5,7 +5,7 @@ import { isAuthed } from "./_auth"
 // Admin-only: undo all seeded-job edits/deletions, restoring the original catalogue.
 const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" }
+    return jsonResponse(405, { error: "Method Not Allowed" })
   }
   if (!(await isAuthed(event))) {
     return jsonResponse(401, { error: "Unauthorized" })

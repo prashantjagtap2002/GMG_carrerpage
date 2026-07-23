@@ -4,7 +4,13 @@ import { isAuthed } from "./_auth"
 import { getActor } from "./_actor"
 import { logActivity } from "./_log"
 
-// Admin-only: create/edit/delete a CRM-added job description.
+const MAX_TITLE = 255
+const MAX_TEXT = 10000
+
+function truncate(val: unknown, max: number): string {
+  return String(val ?? "").slice(0, max)
+}
+
 const handler: Handler = async (event) => {
   if (!(await isAuthed(event))) {
     return jsonResponse(401, { error: "Unauthorized" })
@@ -16,16 +22,19 @@ const handler: Handler = async (event) => {
 
     if (event.httpMethod === "POST") {
       const data = JSON.parse(event.body || "{}")
+      if (!data.title || !String(data.title).trim()) {
+        return jsonResponse(400, { error: "Missing required field: title" })
+      }
       const { error } = await supabase.from("custom_jobs").insert({
         id: data.id,
-        title: data.title,
-        description: data.description,
-        department: data.department,
-        city: data.city,
-        state: data.state,
-        country: data.country,
-        job_type: data.jobType,
-        experience: data.experience,
+        title: truncate(data.title, MAX_TITLE),
+        description: truncate(data.description, MAX_TEXT),
+        department: truncate(data.department, MAX_TITLE),
+        city: truncate(data.city, MAX_TITLE),
+        state: truncate(data.state, MAX_TITLE),
+        country: truncate(data.country, MAX_TITLE),
+        job_type: truncate(data.jobType, MAX_TITLE),
+        experience: truncate(data.experience, MAX_TITLE),
         date_opened: data.dateOpened,
         created_at: data.createdAt,
       })
@@ -35,9 +44,9 @@ const handler: Handler = async (event) => {
         action: "job.create",
         entityType: "job",
         entityId: data.id,
-        summary: `Created job "${data.title}"`,
+        summary: `Created job "${truncate(data.title, 120)}"`,
       })
-      return jsonResponse(200, { success: true })
+      return jsonResponse(201, { success: true })
     }
 
     if (event.httpMethod === "PATCH") {
@@ -45,14 +54,14 @@ const handler: Handler = async (event) => {
       if (!data.id) return jsonResponse(400, { error: "Missing id" })
       const patch = data.patch || {}
       const update: Record<string, unknown> = {}
-      if ("title" in patch) update.title = patch.title
-      if ("description" in patch) update.description = patch.description
-      if ("department" in patch) update.department = patch.department
-      if ("city" in patch) update.city = patch.city
-      if ("state" in patch) update.state = patch.state
-      if ("country" in patch) update.country = patch.country
-      if ("jobType" in patch) update.job_type = patch.jobType
-      if ("experience" in patch) update.experience = patch.experience
+      if ("title" in patch) update.title = truncate(patch.title, MAX_TITLE)
+      if ("description" in patch) update.description = truncate(patch.description, MAX_TEXT)
+      if ("department" in patch) update.department = truncate(patch.department, MAX_TITLE)
+      if ("city" in patch) update.city = truncate(patch.city, MAX_TITLE)
+      if ("state" in patch) update.state = truncate(patch.state, MAX_TITLE)
+      if ("country" in patch) update.country = truncate(patch.country, MAX_TITLE)
+      if ("jobType" in patch) update.job_type = truncate(patch.jobType, MAX_TITLE)
+      if ("experience" in patch) update.experience = truncate(patch.experience, MAX_TITLE)
       if ("dateOpened" in patch) update.date_opened = patch.dateOpened
 
       const { error } = await supabase.from("custom_jobs").update(update).eq("id", data.id)
@@ -83,7 +92,7 @@ const handler: Handler = async (event) => {
       return jsonResponse(200, { success: true })
     }
 
-    return { statusCode: 405, body: "Method Not Allowed" }
+    return jsonResponse(405, { error: "Method Not Allowed" })
   } catch (error) {
     console.error("Error handling custom job:", error)
     return jsonResponse(500, { error: "Internal Server Error" })

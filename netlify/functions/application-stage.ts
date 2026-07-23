@@ -6,7 +6,7 @@ import { logActivity } from "./_log"
 
 const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" }
+    return jsonResponse(405, { error: "Method Not Allowed" })
   }
   if (!(await isAuthed(event))) {
     return jsonResponse(401, { error: "Unauthorized" })
@@ -15,9 +15,10 @@ const handler: Handler = async (event) => {
   try {
     const data = JSON.parse(event.body || "{}")
     if (!data.id) return jsonResponse(400, { error: "Missing id" })
+    if (!data.stage || !String(data.stage).trim()) return jsonResponse(400, { error: "Missing stage" })
 
     const supabase = getSupabase()
-    const update: Record<string, unknown> = { stage: data.stage }
+    const update: Record<string, unknown> = { stage: String(data.stage).slice(0, 100) }
     if (data.stageHistory !== undefined) update.stage_history = data.stageHistory
     const { error } = await supabase
       .from("applications")

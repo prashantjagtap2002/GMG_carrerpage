@@ -4,6 +4,8 @@ import { isAuthed } from "./_auth"
 import { getActor } from "./_actor"
 import { logActivity } from "./_log"
 
+const MAX_NOTE_TEXT = 10000
+
 const handler: Handler = async (event) => {
   if (!(await isAuthed(event))) {
     return jsonResponse(401, { error: "Unauthorized" })
@@ -14,10 +16,13 @@ const handler: Handler = async (event) => {
 
     if (event.httpMethod === "POST") {
       const data = JSON.parse(event.body || "{}")
+      if (!data.applicationId) return jsonResponse(400, { error: "Missing applicationId" })
+      if (!data.text || !String(data.text).trim()) return jsonResponse(400, { error: "Missing note text" })
+      const text = String(data.text).slice(0, MAX_NOTE_TEXT)
       const { error } = await supabase.from("notes").insert({
         id: data.id,
         application_id: data.applicationId,
-        text: data.text,
+        text,
         created_at: data.createdAt,
       })
       if (error) throw error
@@ -26,9 +31,9 @@ const handler: Handler = async (event) => {
         action: "note.create",
         entityType: "application",
         entityId: data.applicationId,
-        summary: `Added a note: "${String(data.text || "").slice(0, 120)}"`,
+        summary: `Added a note: "${text.slice(0, 120)}"`,
       })
-      return jsonResponse(200, { success: true })
+      return jsonResponse(201, { success: true })
     }
 
     if (event.httpMethod === "DELETE") {
@@ -46,7 +51,7 @@ const handler: Handler = async (event) => {
       return jsonResponse(200, { success: true })
     }
 
-    return { statusCode: 405, body: "Method Not Allowed" }
+    return jsonResponse(405, { error: "Method Not Allowed" })
   } catch (error) {
     console.error("Error handling note:", error)
     return jsonResponse(500, { error: "Internal Server Error" })

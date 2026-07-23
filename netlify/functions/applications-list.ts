@@ -2,9 +2,11 @@ import { Handler } from "@netlify/functions"
 import { getSupabase, jsonResponse } from "./_supabase"
 import { isAuthed } from "./_auth"
 
+const MAX_RESULTS = 500
+
 const handler: Handler = async (event) => {
   if (event.httpMethod !== "GET") {
-    return { statusCode: 405, body: "Method Not Allowed" }
+    return jsonResponse(405, { error: "Method Not Allowed" })
   }
   if (!(await isAuthed(event))) {
     return jsonResponse(401, { error: "Unauthorized" })
@@ -14,7 +16,7 @@ const handler: Handler = async (event) => {
     const supabase = getSupabase()
 
     const [{ data: appRows, error: appError }, { data: noteRows, error: noteError }] = await Promise.all([
-      supabase.from("applications").select("*").order("submitted_at", { ascending: false }),
+      supabase.from("applications").select("*").order("submitted_at", { ascending: false }).limit(MAX_RESULTS),
       supabase.from("notes").select("*").order("created_at", { ascending: false }),
     ])
 

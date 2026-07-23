@@ -4,8 +4,10 @@
 // Run with:  node parse-jds.cjs
 const fs = require("fs");
 
-const SRC = "C:\\Users\\prash\\Downloads\\JD\\All_Job_Descriptions.txt";
-const OUT = "C:\\careers-app\\src\\data\\jobs_data.json";
+const path = require("path");
+
+const SRC = process.env.JD_SRC || path.join(__dirname, "All_Job_Descriptions.txt");
+const OUT = process.env.JD_OUT || path.join(__dirname, "src", "data", "jobs_data.json");
 
 const raw = fs.readFileSync(SRC, "utf8");
 const lines = raw.split(/\r?\n/);

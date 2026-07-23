@@ -39,7 +39,7 @@ async function syncAdminUsersMirror(users: MirrorUser[]) {
   const { error: staleError } = await supabase
     .from("admin_users")
     .delete()
-    .not("id", "in", `(${users.map((u) => `"${u.id}"`).join(",") || "''"})`)
+    .not("id", "in", `(${users.map((u) => `"${u.id.replace(/"/g, '""')}"`).join(",") || "''"})`)
   if (staleError) console.error("Failed to prune admin_users mirror:", staleError)
 }
 
@@ -90,6 +90,9 @@ const handler: Handler = async (event) => {
       const data = JSON.parse(event.body || "{}")
       const emailAddress = typeof data.emailAddress === "string" ? data.emailAddress.trim() : ""
       if (!emailAddress) return jsonResponse(400, { error: "Missing emailAddress" })
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress)) {
+        return jsonResponse(400, { error: "Invalid email address" })
+      }
 
       const invitation = await clerkClient.invitations.createInvitation({
         emailAddress,
@@ -102,7 +105,7 @@ const handler: Handler = async (event) => {
         entityId: invitation.id,
         summary: `Invited ${emailAddress} as an admin`,
       })
-      return jsonResponse(200, { invitation: { id: invitation.id, emailAddress: invitation.emailAddress } })
+      return jsonResponse(201, { invitation: { id: invitation.id, emailAddress: invitation.emailAddress } })
     }
 
     if (event.httpMethod === "DELETE") {
@@ -145,7 +148,7 @@ const handler: Handler = async (event) => {
       return jsonResponse(200, { success: true })
     }
 
-    return { statusCode: 405, body: "Method Not Allowed" }
+    return jsonResponse(405, { error: "Method Not Allowed" })
   } catch (error) {
     console.error("Error in admin-users function:", error)
     return jsonResponse(500, { error: "Internal Server Error" })

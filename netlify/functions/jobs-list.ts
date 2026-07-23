@@ -4,7 +4,7 @@ import { getSupabase, jsonResponse } from "./_supabase"
 // Public — the careers site lists jobs to every visitor, not just admins.
 const handler: Handler = async (event) => {
   if (event.httpMethod !== "GET") {
-    return { statusCode: 405, body: "Method Not Allowed" }
+    return jsonResponse(405, { error: "Method Not Allowed" })
   }
 
   try {

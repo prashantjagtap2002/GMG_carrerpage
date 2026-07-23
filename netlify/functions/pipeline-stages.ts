@@ -13,8 +13,9 @@ const DEFAULT_STAGES = [
   { id: "lost", label: "Lost", color: "bg-red-500", sort_order: 5 },
 ]
 
-// Admin-only: shared hiring pipeline stages, backed by Supabase so every
-// admin sees the same board instead of a per-browser localStorage copy.
+const MAX_LABEL = 100
+const MAX_COLOR = 50
+
 const handler: Handler = async (event) => {
   if (!(await isAuthed(event))) {
     return jsonResponse(401, { error: "Unauthorized" })
@@ -24,7 +25,6 @@ const handler: Handler = async (event) => {
     const supabase = getSupabase()
 
     if (event.httpMethod === "GET") {
-      // First run: seed the defaults so there's always something to show.
       await supabase.from("pipeline_stages").upsert(DEFAULT_STAGES, { onConflict: "id", ignoreDuplicates: true })
       const { data, error } = await supabase.from("pipeline_stages").select("*").order("sort_order")
       if (error) throw error
@@ -36,10 +36,11 @@ const handler: Handler = async (event) => {
     if (event.httpMethod === "POST") {
       const data = JSON.parse(event.body || "{}")
       if (!data.id || !data.label) return jsonResponse(400, { error: "Missing id/label" })
+      if (!String(data.label).trim()) return jsonResponse(400, { error: "Label must not be empty" })
       const { error } = await supabase.from("pipeline_stages").insert({
         id: data.id,
-        label: data.label,
-        color: data.color,
+        label: String(data.label).slice(0, MAX_LABEL),
+        color: String(data.color ?? "bg-blue-500").slice(0, MAX_COLOR),
         sort_order: typeof data.sortOrder === "number" ? data.sortOrder : 0,
       })
       if (error) throw error
@@ -50,7 +51,7 @@ const handler: Handler = async (event) => {
         entityId: data.id,
         summary: `Added pipeline stage "${data.label}"`,
       })
-      return jsonResponse(200, { success: true })
+      return jsonResponse(201, { success: true })
     }
 
     if (event.httpMethod === "PATCH") {
@@ -58,8 +59,8 @@ const handler: Handler = async (event) => {
       if (!data.id) return jsonResponse(400, { error: "Missing id" })
       const patch = data.patch || {}
       const update: Record<string, unknown> = {}
-      if ("label" in patch) update.label = patch.label
-      if ("color" in patch) update.color = patch.color
+      if ("label" in patch) update.label = String(patch.label).slice(0, MAX_LABEL)
+      if ("color" in patch) update.color = String(patch.color).slice(0, MAX_COLOR)
       const { error } = await supabase.from("pipeline_stages").update(update).eq("id", data.id)
       if (error) throw error
       await logActivity({
@@ -75,8 +76,9 @@ const handler: Handler = async (event) => {
     if (event.httpMethod === "DELETE") {
       const data = JSON.parse(event.body || "{}")
       if (!data.id) return jsonResponse(400, { error: "Missing id" })
-      const { error } = await supabase.from("pipeline_stages").delete().eq("id", data.id)
+      const { data: deleted, error } = await supabase.from("pipeline_stages").delete().eq("id", data.id).select("id")
       if (error) throw error
+      if (deleted.length === 0) return jsonResponse(404, { error: "Stage not found" })
       await logActivity({
         actor,
         action: "pipeline_stage.delete",
@@ -88,15 +90,18 @@ const handler: Handler = async (event) => {
     }
 
     if (event.httpMethod === "PUT") {
-      // Reorder: body is the full list of stage ids in their new order.
       const data = JSON.parse(event.body || "{}")
       const ids: string[] = Array.isArray(data.ids) ? data.ids : []
       if (ids.length === 0) return jsonResponse(400, { error: "Missing ids" })
-      const results = await Promise.all(
-        ids.map((id, index) => supabase.from("pipeline_stages").update({ sort_order: index }).eq("id", id)),
-      )
-      const failed = results.find((r) => r.error)
-      if (failed?.error) throw failed.error
+      for (const id of ids) {
+        if (typeof id !== "string" || !id.trim()) {
+          return jsonResponse(400, { error: "Invalid stage id in list" })
+        }
+      }
+      for (const [index, id] of ids.entries()) {
+        const { error } = await supabase.from("pipeline_stages").update({ sort_order: index }).eq("id", id)
+        if (error) throw error
+      }
       await logActivity({
         actor,
         action: "pipeline_stage.reorder",
@@ -106,7 +111,7 @@ const handler: Handler = async (event) => {
       return jsonResponse(200, { success: true })
     }
 
-    return { statusCode: 405, body: "Method Not Allowed" }
+    return jsonResponse(405, { error: "Method Not Allowed" })
   } catch (error) {
     console.error("Error handling pipeline stage:", error)
     return jsonResponse(500, { error: "Internal Server Error" })

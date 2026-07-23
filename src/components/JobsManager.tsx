@@ -143,11 +143,6 @@ export function JobsManager() {
             )}
           </tbody>
         </table>
-        {filtered.length === 0 && (
-          <div className="p-10 text-center text-sm text-muted-foreground">
-            No job descriptions match your search.
-          </div>
-        )}
       </div>
 
       <JdFormDialog

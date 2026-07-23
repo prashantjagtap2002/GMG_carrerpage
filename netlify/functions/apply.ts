@@ -3,10 +3,16 @@ import { getSupabase, jsonResponse } from "./_supabase"
 import { logActivity } from "./_log"
 
 const MAX_APPS_PER_HOUR = 10
+const MAX_FIELD_LENGTH = 500
+const VALID_SOURCES = new Set(["careers", "linkedin", "indeed", "referral", "other"])
+
+function truncate(val: unknown): string {
+  return String(val ?? "").slice(0, MAX_FIELD_LENGTH)
+}
 
 const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" }
+    return jsonResponse(405, { error: "Method Not Allowed" })
   }
 
   try {
@@ -34,21 +40,23 @@ const handler: Handler = async (event) => {
       return jsonResponse(429, { error: "Too many applications. Please try again later." })
     }
 
+    const source = VALID_SOURCES.has(data.source) ? data.source : "careers"
+
     const { error } = await supabase.from("applications").insert({
       id: data.id,
       job_id: data.jobId,
-      job_title: data.jobTitle,
-      first_name: data.firstName,
-      last_name: data.lastName,
+      job_title: truncate(data.jobTitle),
+      first_name: truncate(data.firstName),
+      last_name: truncate(data.lastName),
       email,
-      company: data.company,
-      current_title: data.currentTitle,
-      country: data.country,
-      website: data.website,
-      source: data.source,
-      message: data.message,
-      resume_name: data.resumeName,
-      resume_link: data.resumeLink,
+      company: truncate(data.company),
+      current_title: truncate(data.currentTitle),
+      country: truncate(data.country),
+      website: truncate(data.website),
+      source,
+      message: truncate(data.message),
+      resume_name: truncate(data.resumeName),
+      resume_link: truncate(data.resumeLink),
       submitted_at: data.submittedAt,
       stage: data.stage || "new",
       stage_history: data.stageHistory || [],
@@ -64,7 +72,7 @@ const handler: Handler = async (event) => {
       summary: `New application for "${data.jobTitle}"`,
     })
 
-    return jsonResponse(200, { success: true })
+    return jsonResponse(201, { success: true })
   } catch (error) {
     console.error("Error inserting application:", error)
     return jsonResponse(500, { error: "Internal Server Error" })
