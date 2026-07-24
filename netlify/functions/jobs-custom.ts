@@ -103,7 +103,10 @@ const handler: Handler = async (event) => {
       }
 
       const { error } = await supabase.from("custom_jobs").delete().eq("id", id)
-      if (error) throw error
+      if (error) {
+        console.error("Error deleting custom_job:", error)
+        return jsonResponse(500, { error: "Database error", details: error })
+      }
 
       await logActivity({
         actor,
