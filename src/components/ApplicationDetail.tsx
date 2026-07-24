@@ -311,7 +311,7 @@ function DetailField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-foreground/90">{value || "-"}</dd>
+      <dd className="mt-0.5 break-all text-foreground/90">{value || "-"}</dd>
     </div>
   )
 }
