@@ -42,9 +42,17 @@ export function inviteAdminUser(emailAddress: string) {
 }
 
 export function removeAdminUser(id: string) {
-  return authedFetch<{ success: true }>("admin-users", "DELETE", { type: "user", id })
+  return authedFetch<{ success: true }>(
+    `admin-users?type=user&id=${encodeURIComponent(id)}`,
+    "DELETE",
+    { type: "user", id },
+  )
 }
 
 export function revokeAdminInvitation(id: string) {
-  return authedFetch<{ success: true }>("admin-users", "DELETE", { type: "invitation", id })
+  return authedFetch<{ success: true }>(
+    `admin-users?type=invitation&id=${encodeURIComponent(id)}`,
+    "DELETE",
+    { type: "invitation", id },
+  )
 }

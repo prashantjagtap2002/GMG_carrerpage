@@ -120,8 +120,15 @@ const handler: Handler = async (event) => {
     }
 
     if (event.httpMethod === "DELETE") {
-      const data = JSON.parse(event.body || "{}")
-      const { type, id } = data as { type?: string; id?: string }
+      let type = event.queryStringParameters?.type
+      let id = event.queryStringParameters?.id
+      if (!type || !id) {
+        try {
+          const data = JSON.parse(event.body || "{}") as { type?: string; id?: string }
+          type = type || data.type
+          id = id || data.id
+        } catch {}
+      }
       if (!id || (type !== "user" && type !== "invitation")) {
         return jsonResponse(400, { error: "Missing or invalid type/id" })
       }

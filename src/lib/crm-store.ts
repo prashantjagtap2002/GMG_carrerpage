@@ -280,7 +280,7 @@ export async function deleteJob(id: string) {
     saveOverrides(overrides)
     const results = await Promise.all([
       syncFetch("jobs-hidden", "PUT", { jobId: id }),
-      syncFetch("jobs-override", "DELETE", { jobId: id }),
+      syncFetch(`jobs-override?jobId=${encodeURIComponent(id)}`, "DELETE", { jobId: id }),
     ])
     if (!results[0] || !results[1]) {
       setState({ ...state, hiddenIds: prevHiddenIds, overrides: prevOverrides })
@@ -406,7 +406,7 @@ export async function deleteNote(id: string) {
   const notes = state.notes.filter((n) => n.id !== id)
   setState({ ...state, notes })
   saveNotes(notes)
-  const ok = await syncFetch("notes", "DELETE", { id })
+  const ok = await syncFetch(`notes?id=${encodeURIComponent(id)}`, "DELETE", { id })
   if (!ok) {
     setState({ ...state, notes: prevNotes })
     saveNotes(prevNotes)

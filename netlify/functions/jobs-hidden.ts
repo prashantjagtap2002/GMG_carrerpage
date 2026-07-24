@@ -12,10 +12,10 @@ const handler: Handler = async (event) => {
 
   try {
     const supabase = getSupabase()
-    const data = JSON.parse(event.body || "{}")
-    if (!data.jobId) return jsonResponse(400, { error: "Missing jobId" })
 
     if (event.httpMethod === "PUT") {
+      const data = JSON.parse(event.body || "{}")
+      if (!data.jobId) return jsonResponse(400, { error: "Missing jobId" })
       const { error } = await supabase.from("hidden_jobs").upsert({ job_id: data.jobId })
       if (error) throw error
       await logActivity({
@@ -29,7 +29,15 @@ const handler: Handler = async (event) => {
     }
 
     if (event.httpMethod === "DELETE") {
-      const { error } = await supabase.from("hidden_jobs").delete().eq("job_id", data.jobId)
+      let jobId = event.queryStringParameters?.jobId
+      if (!jobId) {
+        try {
+          const data = JSON.parse(event.body || "{}")
+          jobId = data.jobId
+        } catch {}
+      }
+      if (!jobId) return jsonResponse(400, { error: "Missing jobId" })
+      const { error } = await supabase.from("hidden_jobs").delete().eq("job_id", jobId)
       if (error) throw error
       return jsonResponse(200, { success: true })
     }

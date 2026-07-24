@@ -103,7 +103,7 @@ export function usePipelineStore() {
     const prevStages = currentStages
     currentStages = currentStages.filter((s) => s.id !== id)
     emit()
-    syncFetch("pipeline-stages", "DELETE", { id }).then((ok) => {
+    syncFetch(`pipeline-stages?id=${encodeURIComponent(id)}`, "DELETE", { id }).then((ok) => {
       if (!ok) { currentStages = prevStages; emit() }
     })
   }

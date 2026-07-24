@@ -37,9 +37,15 @@ const handler: Handler = async (event) => {
     }
 
     if (event.httpMethod === "DELETE") {
-      const data = JSON.parse(event.body || "{}")
-      if (!data.id) return jsonResponse(400, { error: "Missing id" })
-      const { data: deleted, error } = await supabase.from("notes").delete().eq("id", data.id).select("id")
+      let id = event.queryStringParameters?.id
+      if (!id) {
+        try {
+          const data = JSON.parse(event.body || "{}")
+          id = data.id
+        } catch {}
+      }
+      if (!id) return jsonResponse(400, { error: "Missing id" })
+      const { data: deleted, error } = await supabase.from("notes").delete().eq("id", id).select("id")
       if (error) throw error
       if (deleted.length === 0) return jsonResponse(404, { error: "Note not found" })
       await logActivity({

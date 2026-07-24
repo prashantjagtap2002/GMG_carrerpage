@@ -74,17 +74,23 @@ const handler: Handler = async (event) => {
     }
 
     if (event.httpMethod === "DELETE") {
-      const data = JSON.parse(event.body || "{}")
-      if (!data.id) return jsonResponse(400, { error: "Missing id" })
-      const { data: deleted, error } = await supabase.from("pipeline_stages").delete().eq("id", data.id).select("id")
+      let id = event.queryStringParameters?.id
+      if (!id) {
+        try {
+          const data = JSON.parse(event.body || "{}")
+          id = data.id
+        } catch {}
+      }
+      if (!id) return jsonResponse(400, { error: "Missing id" })
+      const { data: deleted, error } = await supabase.from("pipeline_stages").delete().eq("id", id).select("id")
       if (error) throw error
       if (deleted.length === 0) return jsonResponse(404, { error: "Stage not found" })
       await logActivity({
         actor,
         action: "pipeline_stage.delete",
         entityType: "pipeline_stage",
-        entityId: data.id,
-        summary: `Deleted pipeline stage "${data.label ?? data.id}"`,
+        entityId: id,
+        summary: `Deleted pipeline stage "${id}"`,
       })
       return jsonResponse(200, { success: true })
     }
