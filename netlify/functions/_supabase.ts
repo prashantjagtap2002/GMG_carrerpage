@@ -1,11 +1,16 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js"
 
-/**
- * Talks to Supabase over its HTTPS REST API (PostgREST), not a raw Postgres
- * connection. Supabase's direct DB host is IPv6-only, and Netlify Functions
- * (AWS Lambda) have no outbound IPv6 route, so a `pg` client there just hangs
- * until it times out. REST over HTTPS has no such restriction.
- */
+// Polyfill globalThis.WebSocket if missing in serverless Lambda runtime (< Node 22)
+if (typeof globalThis.WebSocket === "undefined") {
+  class DummyWebSocket {
+    addEventListener() {}
+    removeEventListener() {}
+    close() {}
+    send() {}
+  }
+  ;(globalThis as unknown as { WebSocket: unknown }).WebSocket = DummyWebSocket
+}
+
 let client: SupabaseClient | null = null
 
 const DEFAULT_URL = "https://hhkrkehvtuzukwxxuoyo.supabase.co"
