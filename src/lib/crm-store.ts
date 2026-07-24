@@ -156,16 +156,6 @@ function setState(next: CrmState) {
   emit()
 }
 
-/**
- * Suppress Realtime-triggered refreshes for 2 seconds. Called before every
- * optimistic mutation so a Realtime echo of our own write doesn't cause a
- * premature re-fetch that races with the in-flight request.
- * Uses dynamic import to keep realtime.ts in its own lazy-loaded chunk.
- */
-function suppressRealtime() {
-  import("@/lib/realtime").then((m) => m.suppressRealtime())
-}
-
 function subscribe(listener: () => void) {
   listeners.add(listener)
   return () => {
@@ -183,15 +173,6 @@ if (typeof window !== "undefined") {
   // Applications/notes are admin-only and refreshed explicitly by the CRM
   // (see ApplicationsManager) once a Clerk session is available.
   void refreshJobs()
-
-  // Connect to Supabase Realtime (WebSocket) so database changes from any
-  // device/tab push instant updates into the UI — no polling needed.
-  import("@/lib/realtime").then(({ startRealtime }) => {
-    startRealtime({
-      onJobsChange: () => void refreshJobs(),
-      onApplicationsChange: () => void refreshApplications(),
-    })
-  })
 }
 
 /**
@@ -224,7 +205,6 @@ function isCustomJob(id: string) {
 // ---- Actions ----
 
 export async function addJob(input: Omit<CustomJob, "id" | "createdAt">): Promise<CustomJob> {
-  suppressRealtime()
   const job: CustomJob = { ...input, id: uid("custom"), createdAt: new Date().toISOString() }
   const prevCustomJobs = state.customJobs
   const customJobs = [job, ...state.customJobs]
@@ -240,7 +220,6 @@ export async function addJob(input: Omit<CustomJob, "id" | "createdAt">): Promis
 
 /** Update a job. Custom jobs are edited in place; seeded jobs get an override. */
 export async function updateJob(id: string, patch: Partial<Omit<Job, "id">>) {
-  suppressRealtime()
   if (isCustomJob(id)) {
     const prevCustomJobs = state.customJobs
     const customJobs = state.customJobs.map((j) => (j.id === id ? { ...j, ...patch } : j))
@@ -266,7 +245,6 @@ export async function updateJob(id: string, patch: Partial<Omit<Job, "id">>) {
 
 /** Delete a job. Custom jobs are removed; seeded jobs are hidden from the portal. */
 export async function deleteJob(id: string) {
-  suppressRealtime()
   if (isCustomJob(id)) {
     const prevCustomJobs = state.customJobs
     const prevApplications = state.applications
@@ -314,7 +292,6 @@ export async function deleteJob(id: string) {
 
 /** Undo all seeded-job edits and deletions, restoring the original catalogue. */
 export async function resetSeededCustomizations() {
-  suppressRealtime()
   const prevOverrides = { ...state.overrides }
   const prevHiddenIds = state.hiddenIds
   setState({ ...state, overrides: {}, hiddenIds: [] })
@@ -331,7 +308,6 @@ export async function resetSeededCustomizations() {
 export function addApplication(
   input: Omit<Application, "id" | "submittedAt" | "stage" | "stageHistory">,
 ): Application {
-  suppressRealtime()
   const submittedAt = new Date().toISOString()
   const app: Application = {
     ...input,
@@ -358,7 +334,6 @@ export function addApplication(
 }
 
 export async function deleteApplication(id: string) {
-  suppressRealtime()
   const prevApplications = state.applications
   const prevNotes = state.notes
   const applications = state.applications.filter((a) => a.id !== id)
@@ -375,7 +350,6 @@ export async function deleteApplication(id: string) {
 }
 
 export async function clearApplications() {
-  suppressRealtime()
   const prevApplications = state.applications
   const prevNotes = state.notes
   const ids = state.applications.map((a) => a.id)
@@ -394,7 +368,6 @@ export async function clearApplications() {
 
 /** Move an application to a new pipeline stage, recording the transition in its timeline. */
 export async function updateApplicationStage(id: string, stage: ApplicationStage) {
-  suppressRealtime()
   const prevApplications = state.applications
   const applications = state.applications.map((a) =>
     a.id === id && a.stage !== stage
@@ -415,7 +388,6 @@ export async function updateApplicationStage(id: string, stage: ApplicationStage
 }
 
 export async function addNote(applicationId: string, text: string): Promise<Note> {
-  suppressRealtime()
   const note: Note = { id: uid("note"), applicationId, text, createdAt: new Date().toISOString() }
   const prevNotes = state.notes
   const notes = [note, ...state.notes]
@@ -430,7 +402,6 @@ export async function addNote(applicationId: string, text: string): Promise<Note
 }
 
 export async function deleteNote(id: string) {
-  suppressRealtime()
   const prevNotes = state.notes
   const notes = state.notes.filter((n) => n.id !== id)
   setState({ ...state, notes })

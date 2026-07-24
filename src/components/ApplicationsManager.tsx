@@ -70,10 +70,12 @@ export function ApplicationsManager() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
-  // Applications live in Supabase — Realtime (WebSocket) handles live
-  // updates now, so we only need an initial fetch when this tab mounts.
+  // Applications live in Supabase — poll while this tab is open so a
+  // submission from another device shows up without a manual reload.
   useEffect(() => {
     void handleRefresh()
+    const interval = setInterval(() => void refreshApplications(), 20_000)
+    return () => clearInterval(interval)
   }, [])
 
   async function handleRefresh() {
