@@ -14,7 +14,10 @@ const FALLBACK_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3Mi
 export function getSupabase(): SupabaseClient {
   if (client) return client
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || FALLBACK_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || FALLBACK_SERVICE_ROLE_KEY
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    FALLBACK_SERVICE_ROLE_KEY
   client = createClient(url, key, { auth: { persistSession: false } })
   return client
 }
