@@ -261,7 +261,7 @@ export async function deleteJob(id: string) {
     saveCustomJobs(customJobs)
     saveApplications(applications)
     saveNotes(notes)
-    const ok = await syncFetch("jobs-custom", "DELETE", { id })
+    const ok = await syncFetch(`jobs-custom?id=${encodeURIComponent(id)}`, "DELETE", { id })
     if (!ok) {
       setState({ ...state, customJobs: prevCustomJobs, applications: prevApplications, notes: prevNotes })
       saveCustomJobs(prevCustomJobs)

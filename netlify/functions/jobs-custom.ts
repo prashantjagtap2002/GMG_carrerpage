@@ -76,9 +76,16 @@ const handler: Handler = async (event) => {
       return jsonResponse(200, { success: true })
     }
 
-    if (event.httpMethod === "DELETE") {
-      const data = JSON.parse(event.body || "{}")
-      if (!data.id) return jsonResponse(400, { error: "Missing id" })
+    if (event.httpMethod === "DELETE" || (event.httpMethod === "POST" && event.queryStringParameters?.action === "delete")) {
+      let id = event.queryStringParameters?.id
+      if (!id) {
+        try {
+          const data = JSON.parse(event.body || "{}")
+          id = data.id
+        } catch {}
+      }
+
+      if (!id) return jsonResponse(400, { error: "Missing id parameter" })
 
       // Delete associated notes and applications first to avoid foreign key
       // constraint violations (applications.job_id -> custom_jobs.id).
@@ -86,25 +93,25 @@ const handler: Handler = async (event) => {
         const { data: linkedApps } = await supabase
           .from("applications")
           .select("id")
-          .eq("job_id", data.id)
+          .eq("job_id", id)
         if (linkedApps && linkedApps.length > 0) {
           const appIds = linkedApps.map((a: { id: string }) => a.id)
           await supabase.from("notes").delete().in("application_id", appIds)
-          await supabase.from("applications").delete().eq("job_id", data.id)
+          await supabase.from("applications").delete().eq("job_id", id)
         }
       } catch (err) {
         console.warn("Cleanup of linked apps failed during job delete:", err)
       }
 
-      const { error } = await supabase.from("custom_jobs").delete().eq("id", data.id)
+      const { error } = await supabase.from("custom_jobs").delete().eq("id", id)
       if (error) throw error
 
       await logActivity({
         actor,
         action: "job.delete",
         entityType: "job",
-        entityId: data.id,
-        summary: `Deleted job "${data.id}"`,
+        entityId: id,
+        summary: `Deleted job "${id}"`,
       })
       return jsonResponse(200, { success: true })
     }
