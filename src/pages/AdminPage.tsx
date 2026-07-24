@@ -30,7 +30,6 @@ function AdminPanel({
       <header className="border-b bg-white text-foreground">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={GMG_LOGO} alt="GMG" className="h-8 w-auto" />
             <div className="leading-tight">
               <div className="text-sm font-semibold">GMG Careers · CRM</div>
               <div className="text-xs text-foreground/50">Mini CRM</div>
