@@ -25,10 +25,16 @@ const handler: Handler = async (event) => {
     const supabase = getSupabase()
 
     if (event.httpMethod === "GET") {
-      await supabase.from("pipeline_stages").upsert(DEFAULT_STAGES, { onConflict: "id", ignoreDuplicates: true })
-      const { data, error } = await supabase.from("pipeline_stages").select("*").order("sort_order")
-      if (error) throw error
-      return jsonResponse(200, { stages: data })
+      try {
+        await supabase.from("pipeline_stages").upsert(DEFAULT_STAGES, { onConflict: "id", ignoreDuplicates: true })
+        const { data, error } = await supabase.from("pipeline_stages").select("*").order("sort_order")
+        if (!error && data && data.length > 0) {
+          return jsonResponse(200, { stages: data })
+        }
+      } catch (err) {
+        console.warn("Error fetching pipeline_stages, using default stages:", err)
+      }
+      return jsonResponse(200, { stages: DEFAULT_STAGES })
     }
 
     const actor = await getActor(event)
