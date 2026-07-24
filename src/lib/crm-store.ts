@@ -269,13 +269,26 @@ export async function deleteJob(id: string) {
   suppressRealtime()
   if (isCustomJob(id)) {
     const prevCustomJobs = state.customJobs
+    const prevApplications = state.applications
+    const prevNotes = state.notes
     const customJobs = state.customJobs.filter((j) => j.id !== id)
-    setState({ ...state, customJobs })
+    // Also remove local applications & notes for this job (the server
+    // cascade-deletes them to satisfy foreign key constraints).
+    const removedAppIds = new Set(state.applications.filter((a) => a.jobId === id).map((a) => a.id))
+    const applications = state.applications.filter((a) => a.jobId !== id)
+    const notes = removedAppIds.size > 0
+      ? state.notes.filter((n) => !removedAppIds.has(n.applicationId))
+      : state.notes
+    setState({ ...state, customJobs, applications, notes })
     saveCustomJobs(customJobs)
+    saveApplications(applications)
+    saveNotes(notes)
     const ok = await syncFetch("jobs-custom", "DELETE", { id })
     if (!ok) {
-      setState({ ...state, customJobs: prevCustomJobs })
+      setState({ ...state, customJobs: prevCustomJobs, applications: prevApplications, notes: prevNotes })
       saveCustomJobs(prevCustomJobs)
+      saveApplications(prevApplications)
+      saveNotes(prevNotes)
     }
   } else {
     const prevHiddenIds = state.hiddenIds
