@@ -46,7 +46,8 @@ const handler: Handler = async (event) => {
     return jsonResponse(200, { customJobs, overrides, hiddenIds })
   } catch (error) {
     console.error("Error listing jobs:", error)
-    return jsonResponse(500, { error: "Internal Server Error" })
+    const msg = error instanceof Error ? error.message : typeof error === "object" ? JSON.stringify(error) : String(error)
+    return jsonResponse(500, { error: msg })
   }
 }
 

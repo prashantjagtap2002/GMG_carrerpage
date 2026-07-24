@@ -119,8 +119,9 @@ const handler: Handler = async (event) => {
 
     return jsonResponse(405, { error: "Method Not Allowed" })
   } catch (error) {
-    console.error("Error handling pipeline stage:", error)
-    return jsonResponse(500, { error: "Internal Server Error" })
+    console.error("Error handling pipeline stages:", error)
+    const msg = error instanceof Error ? error.message : typeof error === "object" ? JSON.stringify(error) : String(error)
+    return jsonResponse(500, { error: msg })
   }
 }
 
