@@ -102,9 +102,6 @@ const handler: Handler = async (event) => {
         if (appsErr) console.error("Error deleting applications:", appsErr)
       }
 
-      // Fallback: unlink any remaining applications just in case
-      await supabase.from("applications").update({ job_id: null }).eq("job_id", id)
-
       const { error } = await supabase.from("custom_jobs").delete().eq("id", id)
       if (error) throw error
 
