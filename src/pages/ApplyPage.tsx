@@ -2,7 +2,7 @@ import { useRef, useMemo, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import {
   ArrowLeft, ArrowRight, Briefcase, Building2, CheckCircle2, ChevronDown, Clock,
-  FileText, Globe, Link2, Mail, MapPin, Megaphone, Target, UploadCloud, User, X,
+  FileText, Globe, Link2, Loader2, Mail, MapPin, Megaphone, Target, UploadCloud, User, X,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -76,6 +76,7 @@ function Section({ step, title }: { step: number; title: string }) {
 function ApplyForm({ job, onSubmitted }: { job: Job; onSubmitted: () => void }) {
   const [resume, setResume] = useState<File | null>(null)
   const [dragOver, setDragOver] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const allJobs = useAllJobs()
   const jobTitleMap = useMemo(() => new Map(allJobs.map((j) => [j.title, j.id])), [allJobs])
@@ -89,28 +90,36 @@ function ApplyForm({ job, onSubmitted }: { job: Job; onSubmitted: () => void }) 
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const form = e.currentTarget as HTMLFormElement
-    const data = new FormData(form)
-    const applyingFor = String(data.get("applyingFor") || job.title)
-    const jobId = jobTitleMap.get(applyingFor) ?? job.id
-    const created = addApplication({
-      jobId,
-      jobTitle: applyingFor,
-      firstName: String(data.get("firstName") || ""),
-      lastName: String(data.get("lastName") || ""),
-      email: String(data.get("email") || ""),
-      company: String(data.get("company") || ""),
-      currentTitle: String(data.get("currentTitle") || ""),
-      country: String(data.get("country") || ""),
-      website: String(data.get("website") || ""),
-      source: String(data.get("source") || ""),
-      message: String(data.get("message") || ""),
-      resumeName: resume?.name ?? "",
-    })
-    
-    if (resume) await saveResume(created.id, resume)
+    if (isSubmitting) return
+    setIsSubmitting(true)
 
-    onSubmitted()
+    try {
+      const form = e.currentTarget as HTMLFormElement
+      const data = new FormData(form)
+      const applyingFor = String(data.get("applyingFor") || job.title)
+      const jobId = jobTitleMap.get(applyingFor) ?? job.id
+      const created = addApplication({
+        jobId,
+        jobTitle: applyingFor,
+        firstName: String(data.get("firstName") || ""),
+        lastName: String(data.get("lastName") || ""),
+        email: String(data.get("email") || ""),
+        company: String(data.get("company") || ""),
+        currentTitle: String(data.get("currentTitle") || ""),
+        country: String(data.get("country") || ""),
+        website: String(data.get("website") || ""),
+        source: String(data.get("source") || ""),
+        message: String(data.get("message") || ""),
+        resumeName: resume?.name ?? "",
+      })
+      
+      if (resume) await saveResume(created.id, resume)
+
+      onSubmitted()
+    } catch (err) {
+      console.error("Submission failed:", err)
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -212,9 +221,22 @@ function ApplyForm({ job, onSubmitted }: { job: Job; onSubmitted: () => void }) 
       </div>
 
       <div className="space-y-3 pt-1">
-        <button type="submit" className="group/submit flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-gmg-gold text-sm font-bold text-black transition-all hover:bg-[#ffc233] hover:shadow-[0_0_28px_rgba(255,180,0,0.25)]">
-          Submit application
-          <ArrowRight className="h-4 w-4 transition-transform group-hover/submit:translate-x-0.5" />
+        <button 
+          type="submit" 
+          disabled={isSubmitting}
+          className="group/submit flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-gmg-gold text-sm font-bold text-black transition-all hover:bg-[#ffc233] hover:shadow-[0_0_28px_rgba(255,180,0,0.25)] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin text-black" />
+              Submitting application...
+            </>
+          ) : (
+            <>
+              Submit application
+              <ArrowRight className="h-4 w-4 transition-transform group-hover/submit:translate-x-0.5" />
+            </>
+          )}
         </button>
         <p className="text-center text-xs text-foreground/35">Your details are only shared with the GMG recruitment team.</p>
       </div>
