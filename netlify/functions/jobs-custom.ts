@@ -82,19 +82,23 @@ const handler: Handler = async (event) => {
 
       // Delete associated notes and applications first to avoid foreign key
       // constraint violations (applications.job_id -> custom_jobs.id).
-      const { data: linkedApps } = await supabase
-        .from("applications")
-        .select("id")
-        .eq("job_id", data.id)
-      if (linkedApps && linkedApps.length > 0) {
-        const appIds = linkedApps.map((a: { id: string }) => a.id)
-        await supabase.from("notes").delete().in("application_id", appIds)
-        await supabase.from("applications").delete().eq("job_id", data.id)
+      try {
+        const { data: linkedApps } = await supabase
+          .from("applications")
+          .select("id")
+          .eq("job_id", data.id)
+        if (linkedApps && linkedApps.length > 0) {
+          const appIds = linkedApps.map((a: { id: string }) => a.id)
+          await supabase.from("notes").delete().in("application_id", appIds)
+          await supabase.from("applications").delete().eq("job_id", data.id)
+        }
+      } catch (err) {
+        console.warn("Cleanup of linked apps failed during job delete:", err)
       }
 
-      const { data: deleted, error } = await supabase.from("custom_jobs").delete().eq("id", data.id).select("id")
+      const { error } = await supabase.from("custom_jobs").delete().eq("id", data.id)
       if (error) throw error
-      if (deleted.length === 0) return jsonResponse(404, { error: "Job not found" })
+
       await logActivity({
         actor,
         action: "job.delete",
