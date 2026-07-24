@@ -20,6 +20,17 @@ type RealtimeCallbacks = {
 let channel: RealtimeChannel | null = null
 
 /**
+ * Temporarily suppress Realtime-triggered refreshes. Called by the store
+ * around optimistic mutations so a Realtime echo of our own write doesn't
+ * cause a premature re-fetch that races with the in-flight request.
+ */
+let suppressUntil = 0
+
+export function suppressRealtime(ms = 2000) {
+  suppressUntil = Date.now() + ms
+}
+
+/**
  * Start listening for real-time database changes.
  * Safe to call multiple times — subsequent calls are no-ops.
  */
@@ -33,19 +44,23 @@ export function startRealtime(callbacks: RealtimeCallbacks) {
   let appsTimer: ReturnType<typeof setTimeout> | null = null
 
   function debouncedJobsRefresh() {
+    if (Date.now() < suppressUntil) return
     if (jobsTimer) clearTimeout(jobsTimer)
     jobsTimer = setTimeout(() => {
       jobsTimer = null
+      if (Date.now() < suppressUntil) return
       callbacks.onJobsChange()
-    }, 300)
+    }, 500)
   }
 
   function debouncedAppsRefresh() {
+    if (Date.now() < suppressUntil) return
     if (appsTimer) clearTimeout(appsTimer)
     appsTimer = setTimeout(() => {
       appsTimer = null
+      if (Date.now() < suppressUntil) return
       callbacks.onApplicationsChange()
-    }, 300)
+    }, 500)
   }
 
   channel = supabase
