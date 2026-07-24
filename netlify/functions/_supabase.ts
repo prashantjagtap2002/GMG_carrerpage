@@ -10,10 +10,10 @@ let client: SupabaseClient | null = null
 
 export function getSupabase(): SupabaseClient {
   if (client) return client
-  const url = process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
   if (!url || !key) {
-    throw new Error("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not configured")
+    throw new Error("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / VITE_SUPABASE_URL are not configured")
   }
   client = createClient(url, key, { auth: { persistSession: false } })
   return client
