@@ -87,21 +87,23 @@ const handler: Handler = async (event) => {
 
       if (!id) return jsonResponse(400, { error: "Missing id parameter" })
 
-      // Delete associated notes and applications first to avoid foreign key
-      // constraint violations (applications.job_id -> custom_jobs.id).
-      try {
-        const { data: linkedApps } = await supabase
-          .from("applications")
-          .select("id")
-          .eq("job_id", id)
-        if (linkedApps && linkedApps.length > 0) {
-          const appIds = linkedApps.map((a: { id: string }) => a.id)
-          await supabase.from("notes").delete().in("application_id", appIds)
-          await supabase.from("applications").delete().eq("job_id", id)
+      // Clean up linked applications & notes so foreign key constraints don't fail
+      const { data: linkedApps } = await supabase
+        .from("applications")
+        .select("id")
+        .eq("job_id", id)
+      if (linkedApps && linkedApps.length > 0) {
+        const appIds = linkedApps.map((a: { id: string }) => a.id)
+        if (appIds.length > 0) {
+          const { error: notesErr } = await supabase.from("notes").delete().in("application_id", appIds)
+          if (notesErr) console.error("Error deleting notes:", notesErr)
         }
-      } catch (err) {
-        console.warn("Cleanup of linked apps failed during job delete:", err)
+        const { error: appsErr } = await supabase.from("applications").delete().eq("job_id", id)
+        if (appsErr) console.error("Error deleting applications:", appsErr)
       }
+
+      // Fallback: unlink any remaining applications just in case
+      await supabase.from("applications").update({ job_id: null }).eq("job_id", id)
 
       const { error } = await supabase.from("custom_jobs").delete().eq("id", id)
       if (error) throw error
