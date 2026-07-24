@@ -5,11 +5,9 @@ import { ClerkProvider } from "@clerk/clerk-react"
 import App from "./App"
 import "./index.css"
 
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
-
-if (!CLERK_PUBLISHABLE_KEY) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY — set it in .env (see .env.example).")
-}
+const CLERK_PUBLISHABLE_KEY =
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ||
+  "pk_test_ZnJhbmstY29yYWwtNjQuY2xlcmsuYWNjb3VudHMuZGV2JA"
 
 const SIGN_IN_URL = import.meta.env.VITE_CLERK_SIGN_IN_URL || "/admin"
 const SIGN_UP_URL = import.meta.env.VITE_CLERK_SIGN_UP_URL || "/admin"
