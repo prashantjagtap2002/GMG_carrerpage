@@ -32,7 +32,6 @@ function AdminPanel({
           <div className="flex items-center gap-3">
             <div className="leading-tight">
               <div className="text-sm font-semibold">GMG Careers · CRM</div>
-              <div className="text-xs text-foreground/50">Mini CRM</div>
             </div>
           </div>
           <div className="flex items-center gap-3">
