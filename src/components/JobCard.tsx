@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom"
 import { Briefcase, Building2, Award, MapPin, ArrowRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { formatDate, locationString, type Job } from "@/data/jobs"
+import { formatDate, locationString, formatExperience, type Job } from "@/data/jobs"
 
 export function JobCard({ job }: { job: Job }) {
   const navigate = useNavigate()
@@ -45,7 +45,7 @@ export function JobCard({ job }: { job: Job }) {
           </span>
           {job.experience && job.experience !== "Not specified" && (
             <span className="inline-flex items-center gap-1.5">
-              <Award className="h-4 w-4" /> {job.experience}{/^\d+[-+]?$/.test(job.experience.trim()) ? ' Yrs Exp' : ''}
+              <Award className="h-4 w-4" /> {formatExperience(job.experience)}
             </span>
           )}
         </div>

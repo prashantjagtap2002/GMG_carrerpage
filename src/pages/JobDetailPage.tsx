@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { JobDescription } from "@/components/JobDescription"
-import { formatDate, locationString } from "@/data/jobs"
+import { formatDate, locationString, formatExperience } from "@/data/jobs"
 import { useIsJobsLoading, useJobById } from "@/lib/crm-store"
 import { Loader2 } from "lucide-react"
 
@@ -69,7 +69,7 @@ export function JobDetailPage() {
                     </span>
                     {job.experience && job.experience !== "Not specified" && (
                       <span className="inline-flex items-center gap-1.5">
-                        <Award className="h-4 w-4" /> {job.experience}{/^\d+[-+]?$/.test(job.experience.trim()) ? ' Yrs Exp' : ''}
+                        <Award className="h-4 w-4" /> {formatExperience(job.experience)}
                       </span>
                     )}
                   </div>
@@ -101,7 +101,7 @@ export function JobDetailPage() {
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted-foreground">Experience</dt>
-                  <dd className="text-right font-medium">{job.experience}</dd>
+                  <dd className="text-right font-medium">{formatExperience(job.experience)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted-foreground">Posted</dt>

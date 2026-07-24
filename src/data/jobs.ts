@@ -37,3 +37,11 @@ export function formatDate(iso: string): string {
   if (isNaN(d.getTime())) return iso
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
 }
+
+export function formatExperience(exp: string): string {
+  if (!exp || exp === "Not specified") return exp
+  const trimmed = exp.trim()
+  if (/[a-zA-Z]/.test(trimmed)) return trimmed
+  if (trimmed === "1") return "1 year"
+  return `${trimmed} years`
+}

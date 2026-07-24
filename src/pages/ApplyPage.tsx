@@ -7,7 +7,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { locationString, type Job } from "@/data/jobs"
+import { locationString, formatExperience, type Job } from "@/data/jobs"
 import { addApplication, useAllJobs, useJobById } from "@/lib/crm-store"
 import { saveResume } from "@/lib/resume-store"
 
@@ -292,7 +292,7 @@ export function ApplyPage() {
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-foreground/40">Experience</dt>
-                  <dd className="text-right font-medium text-foreground">{job.experience}</dd>
+                  <dd className="text-right font-medium text-foreground">{formatExperience(job.experience)}</dd>
                 </div>
               </dl>
               <div className="mt-5 flex flex-wrap gap-2">
