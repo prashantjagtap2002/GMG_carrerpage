@@ -10,7 +10,7 @@ import { JobCard } from "@/components/JobCard"
 import { JobFilters, type FilterGroup } from "@/components/JobFilters"
 import { useAllJobs, useIsJobsLoading } from "@/lib/crm-store"
 import { Loader2 } from "lucide-react"
-
+import { toTitleCase } from "@/data/jobs"
 // Build filter options with a count of matching roles (like the IIDE filters).
 function withCounts(getValue: (v: string) => number) {
   return (values: string[]) =>
@@ -27,10 +27,10 @@ export function HomePage() {
 
   const allJobs = useAllJobs()
   const departments = useMemo(() => Array.from(new Set(allJobs.map((j) => j.department))).sort(), [allJobs])
-  const locations = useMemo(() => Array.from(new Set(allJobs.map((j) => j.city).filter(Boolean))).sort(), [allJobs])
+  const locations = useMemo(() => Array.from(new Set(allJobs.map((j) => toTitleCase(j.city)).filter(Boolean))).sort(), [allJobs])
   const jobTypes = useMemo(() => Array.from(new Set(allJobs.map((j) => j.jobType).filter(Boolean))).sort(), [allJobs])
   const deptOptions = useMemo(() => withCounts((v) => allJobs.filter((j) => j.department === v).length)(departments), [allJobs, departments])
-  const locOptions = useMemo(() => withCounts((v) => allJobs.filter((j) => j.city === v).length)(locations), [allJobs, locations])
+  const locOptions = useMemo(() => withCounts((v) => allJobs.filter((j) => toTitleCase(j.city) === v).length)(locations), [allJobs, locations])
   const typeOptions = useMemo(() => withCounts((v) => allJobs.filter((j) => j.jobType === v).length)(jobTypes), [allJobs, jobTypes])
 
   const hasFilters = query.trim() !== "" || dept.length > 0 || loc.length > 0 || type.length > 0
@@ -54,7 +54,7 @@ export function HomePage() {
       const matchesQuery =
         !q || j.title.toLowerCase().includes(q) || j.department.toLowerCase().includes(q)
       const matchesDept = dept.length === 0 || dept.includes(j.department)
-      const matchesLoc = loc.length === 0 || loc.includes(j.city)
+      const matchesLoc = loc.length === 0 || loc.includes(toTitleCase(j.city))
       const matchesType = type.length === 0 || type.includes(j.jobType)
       return matchesQuery && matchesDept && matchesLoc && matchesType
     })

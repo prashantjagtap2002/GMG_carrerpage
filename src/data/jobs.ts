@@ -19,8 +19,16 @@ export type Job = {
  */
 export const seededJobs: Job[] = []
 
+export function toTitleCase(str: string): string {
+  if (!str) return ""
+  return str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 export function locationString(job: Job): string {
-  return [job.city, job.state, job.country].filter(Boolean).join(", ")
+  return [job.city, job.state, job.country]
+    .filter(Boolean)
+    .map(toTitleCase)
+    .join(", ")
 }
 
 export function formatDate(iso: string): string {
