@@ -173,6 +173,15 @@ if (typeof window !== "undefined") {
   // Applications/notes are admin-only and refreshed explicitly by the CRM
   // (see ApplicationsManager) once a Clerk session is available.
   void refreshJobs()
+
+  // Connect to Supabase Realtime (WebSocket) so database changes from any
+  // device/tab push instant updates into the UI — no polling needed.
+  import("@/lib/realtime").then(({ startRealtime }) => {
+    startRealtime({
+      onJobsChange: () => void refreshJobs(),
+      onApplicationsChange: () => void refreshApplications(),
+    })
+  })
 }
 
 /**
