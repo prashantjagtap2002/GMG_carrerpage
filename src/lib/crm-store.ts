@@ -79,7 +79,11 @@ export async function fetchJSON<T>(path: string): Promise<T | undefined> {
     const res = await fetch(`${FN_BASE}/${path}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     })
-    if (!res.ok) throw new Error(`${path} responded ${res.status}`)
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "")
+      console.error(`Failed to fetch (${path}): HTTP ${res.status}`, errText)
+      throw new Error(`${path} responded ${res.status}: ${errText}`)
+    }
     return (await res.json()) as T
   } catch (err) {
     console.error(`Failed to fetch (${path}):`, err)
